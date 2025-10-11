@@ -1,10 +1,13 @@
-[gd_scene load_steps=7 format=3 uid="uid://otau0j5e6xpf"]
+[gd_scene load_steps=10 format=3 uid="uid://otau0j5e6xpf"]
 
 [ext_resource type="Script" uid="uid://da4jmxbeqpsyh" path="res://addons/statemachine/StateMachine.gd" id="1_eb3ea"]
 [ext_resource type="Script" uid="uid://cmo4rd026j7ny" path="res://addons/statemachine/StateMachineState_AnyKeyToContinue.gd" id="2_p0bqw"]
 [ext_resource type="FontFile" uid="uid://c2fxilm8q060u" path="res://Fonts/jorvik-informal.regular.ttf" id="3_dalco"]
 [ext_resource type="Script" uid="uid://cfwv1w01lwr2y" path="res://addons/statemachine/StateMachineState.gd" id="4_jmcgl"]
 [ext_resource type="Script" uid="uid://b7xmo2qysuhpg" path="res://Scripts/ChangeStateButton.gd" id="5_p0bqw"]
+[ext_resource type="Script" uid="uid://bq0infj5qq8op" path="res://Scripts/StatePlay.gd" id="6_dalco"]
+[ext_resource type="Texture2D" uid="uid://dmhop3uuxg8p6" path="res://Art/GroundNoise.tres" id="7_oc3if"]
+[ext_resource type="Texture2D" uid="uid://qbf5i1nycolt" path="res://Art/MistNoise.tres" id="8_wuua4"]
 
 [sub_resource type="LabelSettings" id="LabelSettings_oc3if"]
 font = ExtResource("3_dalco")
@@ -83,11 +86,13 @@ offset_left = 40.0
 offset_right = 100.0
 grow_vertical = 2
 
-[node name="Button_Play" type="Button" parent="State_MainMenu/VBoxContainer"]
+[node name="Button_Play" type="Button" parent="State_MainMenu/VBoxContainer" node_paths=PackedStringArray("next_state")]
 layout_mode = 2
 theme_override_fonts/font = ExtResource("3_dalco")
 theme_override_font_sizes/font_size = 32
 text = "Play"
+script = ExtResource("5_p0bqw")
+next_state = NodePath("../../../State_Play")
 
 [node name="Spacer1" type="Control" parent="State_MainMenu/VBoxContainer"]
 custom_minimum_size = Vector2(0, 20)
@@ -125,6 +130,7 @@ theme_override_font_sizes/font_size = 32
 text = "Quit"
 
 [node name="State_Credits" type="Control" parent="." node_paths=PackedStringArray("next_state")]
+visible = false
 layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
@@ -162,6 +168,7 @@ horizontal_alignment = 1
 vertical_alignment = 1
 
 [node name="State_About" type="Control" parent="." node_paths=PackedStringArray("next_state")]
+visible = false
 layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
@@ -195,3 +202,39 @@ text = "Strategically move units to take out your opponent.
 Losely based on classical Napoleonic miniatures warfare."
 horizontal_alignment = 1
 vertical_alignment = 1
+
+[node name="State_Play" type="Control" parent="."]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("6_dalco")
+metadata/_custom_type_script = "uid://cfwv1w01lwr2y"
+
+[node name="ParallaxBackground" type="ParallaxBackground" parent="State_Play"]
+follow_viewport_enabled = true
+
+[node name="Parallax_Ground" type="ParallaxLayer" parent="State_Play/ParallaxBackground"]
+motion_mirroring = Vector2(1152, 1152)
+
+[node name="TextureRect" type="TextureRect" parent="State_Play/ParallaxBackground/Parallax_Ground"]
+offset_right = 40.0
+offset_bottom = 40.0
+size_flags_horizontal = 3
+size_flags_vertical = 3
+texture = ExtResource("7_oc3if")
+metadata/_edit_use_anchors_ = true
+
+[node name="Parallax_Mist" type="ParallaxLayer" parent="State_Play/ParallaxBackground"]
+scale = Vector2(2, 2)
+motion_mirroring = Vector2(1152, 1152)
+
+[node name="TextureRect" type="TextureRect" parent="State_Play/ParallaxBackground/Parallax_Mist"]
+offset_right = 40.0
+offset_bottom = 40.0
+size_flags_horizontal = 3
+size_flags_vertical = 3
+texture = ExtResource("8_wuua4")
+metadata/_edit_use_anchors_ = true
