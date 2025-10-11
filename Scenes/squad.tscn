@@ -1,0 +1,52 @@
+[gd_scene load_steps=2 format=3 uid="uid://dqia78n2o5l8v"]
+
+[ext_resource type="Script" uid="uid://w7je84kvc6a2" path="res://Scripts/Squad.gd" id="1_p5dhu"]
+
+[node name="Squad" type="Node2D"]
+script = ExtResource("1_p5dhu")
+metadata/_custom_type_script = "uid://w7je84kvc6a2"
+
+[node name="ColorRect" type="ColorRect" parent="."]
+clip_children = 2
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -20.0
+offset_top = -20.0
+offset_right = 20.0
+offset_bottom = 20.0
+grow_horizontal = 2
+grow_vertical = 2
+pivot_offset = Vector2(20, 20)
+metadata/_edit_use_anchors_ = true
+
+[node name="Icons" type="Node2D" parent="."]
+position = Vector2(-20, -20)
+
+[node name="Cavalry" type="Line2D" parent="Icons"]
+points = PackedVector2Array(39, 1, 1, 39)
+width = 2.0
+default_color = Color(0, 0, 0, 1)
+begin_cap_mode = 2
+end_cap_mode = 2
+
+[node name="Infantry" type="Line2D" parent="Icons"]
+points = PackedVector2Array(39, 39, 1, 1)
+width = 2.0
+default_color = Color(0, 0, 0, 1)
+begin_cap_mode = 2
+end_cap_mode = 2
+
+[node name="Artillery" type="Line2D" parent="Icons"]
+points = PackedVector2Array(15, 5, 5, 15, 5, 25, 15, 35, 25, 35, 35, 25, 35, 15, 25, 5)
+width = 2.0
+default_color = Color(0.23392546, 0.23392546, 0.23392543, 1)
+begin_cap_mode = 2
+end_cap_mode = 2
+
+[node name="Facing" type="Line2D" parent="Icons"]
+points = PackedVector2Array(20, 12.5, 20, 2.5, 17.5, 5, 20, 2.5, 22.5, 5)
+width = 1.0
+default_color = Color(0.4506483, 0.4506483, 0.45064825, 1)
