@@ -17,57 +17,57 @@ var _countdown : float = 0
 var _leave_tween : Tween = null
 
 func _process(delta: float) -> void:
-	if time_out_in_seconds > 0:
-		_countdown += delta
-		if _countdown > time_out_in_seconds:
-			our_state_machine.switch_state(next_state.name)
+    if time_out_in_seconds > 0:
+        _countdown += delta
+        if _countdown > time_out_in_seconds:
+            our_state_machine.switch_state(next_state.name)
 
 func _input(event : InputEvent) -> void:
-	_handle_event(event)
+    _handle_event(event)
 
 func _unhandled_input(event : InputEvent) -> void:
-	_handle_event(event)
+    _handle_event(event)
 
 func _handle_event(event : InputEvent) -> void:
-	# We process on "released" instead of pressed because otherwise immediately
-	# switching screens could still have the mouse being pressed on some other
-	# screen's button.
-	if process_mode == ProcessMode.PROCESS_MODE_DISABLED:
-		return
-		
-	if _leave_tween == null:
-		if event.is_released():
-			if event is InputEventKey:
-				our_state_machine.switch_state(next_state.name)
-			if event is InputEventMouseButton:
-				our_state_machine.switch_state(next_state.name)
+    # We process on "released" instead of pressed because otherwise immediately
+    # switching screens could still have the mouse being pressed on some other
+    # screen's button.
+    if process_mode == ProcessMode.PROCESS_MODE_DISABLED:
+        return
+        
+    if _leave_tween == null:
+        if event.is_released():
+            if event is InputEventKey:
+                our_state_machine.switch_state(next_state.name)
+            if event is InputEventMouseButton:
+                our_state_machine.switch_state(next_state.name)
 
 func exit_state(next_state: StateMachineState) -> void:
-	if !fade_out:
-		super.exit_state(next_state)
-		return
-	
-	if _leave_tween != null && _leave_tween.is_running():
-		return
+    if !fade_out:
+        super.exit_state(next_state)
+        return
+    
+    if _leave_tween != null && _leave_tween.is_running():
+        return
 
-	_leave_tween = get_tree().create_tween()
-	self.modulate = Color(Color.WHITE, 1)
-	var destination_color : Color = Color(Color.WHITE, 0)
-	_leave_tween.tween_property(self, "modulate", destination_color, fade_time)
-	var when_finished_callback : Callable = Callable(self, "_on_leave_tween_finished")
-	_leave_tween.tween_callback(when_finished_callback.bind(next_state))
+    _leave_tween = get_tree().create_tween()
+    self.modulate = Color(Color.WHITE, 1)
+    var destination_color : Color = Color(Color.WHITE, 0)
+    _leave_tween.tween_property(self, "modulate", destination_color, fade_time)
+    var when_finished_callback : Callable = Callable(self, "_on_leave_tween_finished")
+    _leave_tween.tween_callback(when_finished_callback.bind(next_state))
 
 func _on_leave_tween_finished(next_state: StateMachineState) -> void:
-	super.exit_state(next_state)
-	_leave_tween = null
+    super.exit_state(next_state)
+    _leave_tween = null
 
 func enter_state() -> void:
-	super.enter_state()
-	_countdown = 0
-	_leave_tween = null
-	if fade_in:
-		self.modulate = Color(Color.WHITE, 0)
-		var tween : Tween = get_tree().create_tween()
-		var destination_color : Color = Color(Color.WHITE, 1)
-		tween.tween_property(self, "modulate", destination_color, fade_time)
-	
+    super.enter_state()
+    _countdown = 0
+    _leave_tween = null
+    if fade_in:
+        self.modulate = Color(Color.WHITE, 0)
+        var tween : Tween = get_tree().create_tween()
+        var destination_color : Color = Color(Color.WHITE, 1)
+        tween.tween_property(self, "modulate", destination_color, fade_time)
+    
