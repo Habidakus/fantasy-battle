@@ -8,7 +8,7 @@ var _mist_speed : float
 const _mist_min_speed : float = 2.5
 const _mist_max_speed : float = 15
 var rnd : RandomNumberGenerator = RandomNumberGenerator.new()
-
+var _armies : Array[Army]
 # screen x: 20 to 1130
 # screen y: 23 to 627
 
@@ -16,53 +16,23 @@ func _ready() -> void:
     _mist_parallax_layer = find_child("Parallax_Mist") as ParallaxLayer
     _mist_direction = rnd.randf() * 360.0
     _mist_speed = rnd.randf() * (_mist_max_speed - _mist_min_speed) + _mist_min_speed
-    const total : int = 6
-    var squads : Array[Squad]
-    for i in range(total):
-        var s : Squad = squad_scene.instantiate()
-        s.Initialize(15, Squad.SquadType.INFANTRY)
-        s.position.x = 20 + (1 + i) * (1130 - 20) / float(total + 2)
-        s.position.y = 23 + (1 + i) * (627 - 23) / float(total + 2)
-        match i:
-            0:
-                s.formation = Squad.Formation.LINE
-            1:
-                s.formation = Squad.Formation.DOUBLELINE
-            2:
-                s.formation = Squad.Formation.TRIPLELINE
-            3:
-                s.formation = Squad.Formation.SQUARE
-            4:
-                s.formation = Squad.Formation.SKIRMISH
-            5:
-                s.formation = Squad.Formation.COLUMN
-        add_child(s)
-        squads.append(s)
-    for dt in [Squad.DamageType.MELEE, Squad.DamageType.CHARGE, Squad.DamageType.MISSLE, Squad.DamageType.ARTILLERY]:
-        for i in range(total):
-            for j in range(total):
-                var dice_attack : int = squads[i].GetDieCountInAttack(dt)
-                var dice_defense : int = squads[j].GetDieCountInAttack(dt)
-                var mods : Vector2i = Squad.CalculateDieMods(squads[i].formation, squads[j].formation, dt)
-                var dice : int = max(dice_attack, dice_defense)
-                var attack_damage : int = 0
-                var defense_damage : int = 0
-                for times in range(100):
-                    for d in range(dice):
-                        var attack_roll : int = rnd.randi() % (6 + mods.x)
-                        var defense_roll : int = rnd.randi() % (6 + mods.y)
-                        if d >= dice_attack:
-                            var second_roll : int = rnd.randi() % (6 + mods.x)
-                            attack_roll = min(second_roll, attack_roll)
-                        if d >= dice_defense:
-                            var second_roll : int = rnd.randi() % (6 + mods.x)
-                            defense_roll = min(second_roll, defense_roll)
-                        if attack_roll > defense_roll:
-                            attack_damage += 1
-                        elif attack_roll < defense_roll:
-                            if dt == Squad.DamageType.MELEE || dt == Squad.DamageType.CHARGE:
-                                defense_damage += 1
-                print(Squad.Formation.keys()[squads[i].formation], "(", Squad.DamageType.keys()[dt], ")", Squad.Formation.keys()[squads[j].formation], "=", float(attack_damage) / 100.0, " ", float(defense_damage) / 100.0)
+    _armies.append(Army.new())
+    _armies[0].SetColor(Color.LIGHT_CYAN)
+    _armies.append(Army.new())
+    _armies[1].SetColor(Color.LIGHT_GOLDENROD)
+    const squads_per_army : int = 3
+    for army : Army in _armies:
+        var dy = 1 if army == _armies[0] else 7
+        var rot : float = PI if army == _armies[0] else 0
+        for i in range(squads_per_army):
+            var s : Squad = squad_scene.instantiate()
+            add_child(s)
+            army.Add(s)
+            var st : Squad.SquadType = Squad.SquadType.INFANTRY if i != 1 else Squad.SquadType.CAVALRY
+            s.Initialize(army, 15, st, Squad.Formation.TRIPLELINE) # DOUBLELINE)
+            s.position.x = 20 + (1 + i) * (1130 - 20) / float(squads_per_army + 1)
+            s.position.y = 23 + (0 + dy) * (627 - 23) / 8.0
+            s.rotation = rot
     
 func _process(delta: float) -> void:
     _mist_direction += delta * ((rnd.randf() * 1) - 0.5)

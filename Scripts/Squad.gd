@@ -11,16 +11,11 @@ enum Formation { LINE, DOUBLELINE, TRIPLELINE, SQUARE, SKIRMISH, COLUMN }
 # Column - Extra movement, reduced damage dealt from melee and missile, extra damage from artillery
 
 var initial_size : float
-var shape : Control
+var shape : ColorRect
 var icons : Node2D
 var units : Array[Unit]
 var formation : Formation = Formation.DOUBLELINE
 var squadType : SquadType = SquadType.INFANTRY
-
-static func CreateInfantry(count : int) -> Squad:
-    var squad : Squad = Squad.new()
-    squad.Initialize(count, SquadType.INFANTRY)
-    return squad
 
 static func CalculateDieMods(attacker : Formation, defender : Formation, damageType : DamageType) -> Vector2i:
     match damageType:
@@ -238,13 +233,16 @@ static func CalculateDieMods_DefenderAgainstMelee(defender : Formation) -> int:
             assert(false)
             return 0
 
-func Initialize(count : int, st : SquadType) -> void:
+# s.Initialize(army, 15, Squad.SquadType.INFANTRY, Squad.Formation.DOUBLELINE)
+func Initialize(army : Army, count : int, st : SquadType, form : Formation) -> void:
     SetSquadType(st)
+    SetFormation(form)
+    shape.color = army.GetColor()
     for i in range(count):
         units.append(Unit.new())
 
 func _ready() -> void:
-    shape = find_child("ColorRect") as Control
+    shape = find_child("ColorRect") as ColorRect
     icons = find_child("Icons") as Node2D
     initial_size = shape.size.x
 
@@ -370,3 +368,5 @@ func SetSquadType(st : SquadType) -> void:
             infantryIcon.hide()
             artilleryIcon.show()
             
+func SetFormation(form : Formation) -> void:
+    formation = form
