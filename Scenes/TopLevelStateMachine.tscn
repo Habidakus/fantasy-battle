@@ -228,7 +228,7 @@ texture = ExtResource("7_oc3if")
 metadata/_edit_use_anchors_ = true
 
 [node name="Parallax_Mist" type="ParallaxLayer" parent="State_Play/ParallaxBackground"]
-scale = Vector2(2, 2)
+z_index = 5
 motion_mirroring = Vector2(1152, 1152)
 
 [node name="TextureRect" type="TextureRect" parent="State_Play/ParallaxBackground/Parallax_Mist"]
