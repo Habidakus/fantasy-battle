@@ -17,6 +17,7 @@ func _ready() -> void:
     _mist_direction = rnd.randf() * 360.0
     _mist_speed = rnd.randf() * (_mist_max_speed - _mist_min_speed) + _mist_min_speed
     const total : int = 6
+    var squads : Array[Squad]
     for i in range(total):
         var s : Squad = squad_scene.instantiate()
         s.Initialize(15, Squad.SquadType.INFANTRY)
@@ -36,6 +37,32 @@ func _ready() -> void:
             5:
                 s.formation = Squad.Formation.COLUMN
         add_child(s)
+        squads.append(s)
+    for dt in [Squad.DamageType.MELEE, Squad.DamageType.CHARGE, Squad.DamageType.MISSLE, Squad.DamageType.ARTILLERY]:
+        for i in range(total):
+            for j in range(total):
+                var dice_attack : int = squads[i].GetDieCountInAttack(dt)
+                var dice_defense : int = squads[j].GetDieCountInAttack(dt)
+                var mods : Vector2i = Squad.CalculateDieMods(squads[i].formation, squads[j].formation, dt)
+                var dice : int = max(dice_attack, dice_defense)
+                var attack_damage : int = 0
+                var defense_damage : int = 0
+                for times in range(100):
+                    for d in range(dice):
+                        var attack_roll : int = rnd.randi() % (6 + mods.x)
+                        var defense_roll : int = rnd.randi() % (6 + mods.y)
+                        if d >= dice_attack:
+                            var second_roll : int = rnd.randi() % (6 + mods.x)
+                            attack_roll = min(second_roll, attack_roll)
+                        if d >= dice_defense:
+                            var second_roll : int = rnd.randi() % (6 + mods.x)
+                            defense_roll = min(second_roll, defense_roll)
+                        if attack_roll > defense_roll:
+                            attack_damage += 1
+                        elif attack_roll < defense_roll:
+                            if dt == Squad.DamageType.MELEE || dt == Squad.DamageType.CHARGE:
+                                defense_damage += 1
+                print(Squad.Formation.keys()[squads[i].formation], "(", Squad.DamageType.keys()[dt], ")", Squad.Formation.keys()[squads[j].formation], "=", float(attack_damage) / 100.0, " ", float(defense_damage) / 100.0)
     
 func _process(delta: float) -> void:
     _mist_direction += delta * ((rnd.randf() * 1) - 0.5)

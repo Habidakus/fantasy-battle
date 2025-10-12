@@ -1,7 +1,14 @@
 class_name Squad extends Node2D
 
+enum DamageType { MELEE, CHARGE, MISSLE, ARTILLERY }
 enum SquadType { INFANTRY, CAVALRY, ARTILLERY }
 enum Formation { LINE, DOUBLELINE, TRIPLELINE, SQUARE, SKIRMISH, COLUMN }
+# Line - maximum damage dealt, maximum damage taken from melee and missile
+# Double line - slightly increased missile & artillery taken
+# Triple line - increased missile & artillery taken
+# Square - no flanking vulnerability, extra damage from missile and artillery
+# Skirmish - increased melee damage taken, reduced missile and artillery damage taken
+# Column - Extra movement, reduced damage dealt from melee and missile, extra damage from artillery
 
 var initial_size : float
 var shape : Control
@@ -15,10 +22,226 @@ static func CreateInfantry(count : int) -> Squad:
     squad.Initialize(count, SquadType.INFANTRY)
     return squad
 
+static func CalculateDieMods(attacker : Formation, defender : Formation, damageType : DamageType) -> Vector2i:
+    match damageType:
+        DamageType.MELEE:
+            return Vector2i(CalculateDieMods_AttackerIsMelee(attacker), CalculateDieMods_DefenderAgainstMelee(defender))
+        DamageType.CHARGE:
+            return Vector2i(CalculateDieMods_AttackerIsCharge(attacker), CalculateDieMods_DefenderAgainstCharge(defender))
+        DamageType.MISSLE:
+            return Vector2i(CalculateDieMods_AttackerIsMissile(attacker), CalculateDieMods_DefenderAgainstMissile(defender))
+        DamageType.ARTILLERY:
+            return Vector2i(CalculateDieMods_AttackerIsArtillery(attacker), CalculateDieMods_DefenderAgainstArtillery(defender))
+        _:
+            assert(false, "Unknown Damage Type: " + str(damageType))
+            return Vector2i(0, 0)
+
+func GetDieCountInAttack(damageType : DamageType) -> int:
+    match damageType:
+        DamageType.MELEE:
+            return GetDieCountInAttack_Melee()
+        DamageType.CHARGE:
+            return GetDieCountInAttack_Charge()
+        DamageType.MISSLE:
+            return GetDieCountInAttack_Missile()
+        DamageType.ARTILLERY:
+            return GetDieCountInAttack_Artillery()
+        _:
+            assert(false)
+            return 0
+
+func GetDieCountInAttack_Melee() -> int:
+    var widthAndRanks : Vector2i = GetWidthAndRanks()
+    match formation:
+        Formation.LINE:
+            return widthAndRanks.x
+        Formation.DOUBLELINE:
+            return int(ceil(min(float(units.size()), widthAndRanks.x * 1.5)))
+        Formation.TRIPLELINE:
+            return min(units.size(), widthAndRanks.x * 2)
+        Formation.SQUARE:
+            return widthAndRanks.x
+        Formation.SKIRMISH:
+            return widthAndRanks.x
+        Formation.COLUMN:
+            return widthAndRanks.x
+        _:
+            assert(false)
+            return 0
+
+func GetDieCountInAttack_Charge() -> int:
+    var widthAndRanks : Vector2i = GetWidthAndRanks()
+    match formation:
+        Formation.LINE:
+            return widthAndRanks.x
+        Formation.DOUBLELINE:
+            return min(units.size(), widthAndRanks.x * 2)
+        Formation.TRIPLELINE:
+            return min(units.size(), widthAndRanks.x * 3)
+        Formation.SQUARE:
+            return widthAndRanks.x
+        Formation.SKIRMISH:
+            return widthAndRanks.x
+        Formation.COLUMN:
+            return min(units.size(), widthAndRanks.x * 3)
+        _:
+            assert(false)
+            return 0
+
+func GetDieCountInAttack_Missile() -> int:
+    if formation == Formation.COLUMN:
+        return min(units.size(), GetWidthAndRanks().x * 3)
+    else:
+        return units.size()
+        
+func GetDieCountInAttack_Artillery() -> int:
+    if formation == Formation.LINE || formation == Formation.SKIRMISH:
+        return units.size()
+    else:
+        return GetWidthAndRanks().x
+
+static func CalculateDieMods_AttackerIsMissile(attacker : Formation) -> int:
+    match attacker:
+        Formation.LINE:
+            return 1
+        Formation.DOUBLELINE:
+            return 0
+        Formation.TRIPLELINE:
+            return 0
+        Formation.SQUARE:
+            return -1
+        Formation.SKIRMISH:
+            return 1
+        Formation.COLUMN:
+            return -1
+        _:
+            assert(false)
+            return 0
+static func CalculateDieMods_DefenderAgainstMissile(defender : Formation) -> int:
+    match defender:
+        Formation.LINE:
+            return 0
+        Formation.DOUBLELINE:
+            return -1
+        Formation.TRIPLELINE:
+            return -1
+        Formation.SQUARE:
+            return -1
+        Formation.SKIRMISH:
+            return 2
+        Formation.COLUMN:
+            return -1
+        _:
+            assert(false)
+            return 0
+static func CalculateDieMods_AttackerIsArtillery(attacker : Formation) -> int:
+    match attacker:
+        Formation.LINE:
+            return 1
+        Formation.DOUBLELINE:
+            return -1
+        Formation.TRIPLELINE:
+            return -2
+        Formation.SQUARE:
+            return -2
+        Formation.SKIRMISH:
+            return 1
+        Formation.COLUMN:
+            return -2
+        _:
+            assert(false)
+            return 0
+static func CalculateDieMods_DefenderAgainstArtillery(defender : Formation) -> int:
+    match defender:
+        Formation.LINE:
+            return 1
+        Formation.DOUBLELINE:
+            return 0
+        Formation.TRIPLELINE:
+            return 0
+        Formation.SQUARE:
+            return -1
+        Formation.SKIRMISH:
+            return 2
+        Formation.COLUMN:
+            return -2
+        _:
+            assert(false)
+            return 0
+
+static func CalculateDieMods_AttackerIsCharge(attacker : Formation) -> int:
+    match attacker:
+        Formation.LINE:
+            return 1
+        Formation.DOUBLELINE:
+            return 1
+        Formation.TRIPLELINE:
+            return 1
+        Formation.SQUARE:
+            return -1
+        Formation.SKIRMISH:
+            return -1
+        Formation.COLUMN:
+            return 1
+        _:
+            assert(false)
+            return 0
+static func CalculateDieMods_DefenderAgainstCharge(defender : Formation) -> int:
+    match defender:
+        Formation.LINE:
+            return -1
+        Formation.DOUBLELINE:
+            return 0
+        Formation.TRIPLELINE:
+            return 1
+        Formation.SQUARE:
+            return 1
+        Formation.SKIRMISH:
+            return -2
+        Formation.COLUMN:
+            return 1
+        _:
+            assert(false)
+            return 0
+static func CalculateDieMods_AttackerIsMelee(attacker : Formation) -> int:
+    match attacker:
+        Formation.LINE:
+            return 1
+        Formation.DOUBLELINE:
+            return 0
+        Formation.TRIPLELINE:
+            return 0
+        Formation.SQUARE:
+            return -1
+        Formation.SKIRMISH:
+            return -1
+        Formation.COLUMN:
+            return -1
+        _:
+            assert(false)
+            return 0
+static func CalculateDieMods_DefenderAgainstMelee(defender : Formation) -> int:
+    match defender:
+        Formation.LINE:
+            return -1
+        Formation.DOUBLELINE:
+            return 0
+        Formation.TRIPLELINE:
+            return 0
+        Formation.SQUARE:
+            return 0
+        Formation.SKIRMISH:
+            return -1
+        Formation.COLUMN:
+            return 0
+        _:
+            assert(false)
+            return 0
+
 func Initialize(count : int, st : SquadType) -> void:
     SetSquadType(st)
     for i in range(count):
-        units.append(Unit.CreateInfantry())
+        units.append(Unit.new())
 
 func _ready() -> void:
     shape = find_child("ColorRect") as Control
@@ -46,6 +269,47 @@ static func GetUnitDim(st : SquadType) -> Vector2:
         _:
             assert(false, "GetUnitDim(" + str(st) + ")")
             return Vector2(10,10)
+
+func GetWidthAndRanks() -> Vector2i:
+    var unit_dim : Vector2 = GetUnitDim(squadType)
+    var unit_count : int = units.size()
+    match formation:
+        Formation.LINE:
+            return Vector2i(unit_count, 1)
+        Formation.DOUBLELINE:
+            var ranks : int = 2
+            var width : int = ceil(float(unit_count) / float(ranks))
+            if ranks > width:
+                var t = ranks
+                ranks = width
+                width = t
+            return Vector2i(width, ranks)
+        Formation.TRIPLELINE:
+            var ranks : int = 3
+            var width : int = ceil(float(unit_count) / float(ranks))
+            if ranks > width:
+                var t = ranks
+                ranks = width
+                width = t
+            return Vector2i(width, ranks)
+        Formation.SQUARE:
+            var s : float = sqrt(unit_count)
+            var ranks : int = floor(s)
+            var width : int = ceil(s)
+            if ranks * width < unit_count:
+                ranks += 1
+            return Vector2i(width, ranks)
+        Formation.SKIRMISH:
+            var s : int = int(ceil(sqrt(unit_count)))
+            return Vector2i(s, s)
+        Formation.COLUMN:
+            var width : int = ceil(pow(unit_count, 0.333))
+            var ranks : int = ceil(unit_count / float(width))
+            return Vector2(width, ranks)
+        _:
+            assert(false, "GetWidthAndRanks() with unknown formation: " + str(formation))
+            var s : int = int(ceil(sqrt(unit_count)))
+            return Vector2i(s, s)
 
 func GetDim() -> Vector2:
     var unit_dim : Vector2 = GetUnitDim(squadType)
