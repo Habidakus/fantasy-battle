@@ -18,23 +18,28 @@ func _ready() -> void:
     _mist_parallax_layer = find_child("Parallax_Mist") as ParallaxLayer
     _mist_direction = rnd.randf() * 360.0
     _mist_speed = rnd.randf() * (_mist_max_speed - _mist_min_speed) + _mist_min_speed
+    _turn_engine = turn_engine_scene.instantiate() as TurnEngine
+    add_child(_turn_engine)
+
+func enter_state() -> void:
+    super.enter_state()
+
     _armies.append(Army.new())
     _armies[0].SetColor(Color.LIGHT_CYAN)
     _armies.append(Army.new())
     _armies[1].SetColor(Color.LIGHT_GOLDENROD)
-    _turn_engine = turn_engine_scene.instantiate() as TurnEngine
-    add_child(_turn_engine)
+    
     const squads_per_army : int = 3
     for army : Army in _armies:
         army.SetController(AIArmyController.new())
         var dy = 1 if army == _armies[0] else 7
-        var rot : float = PI if army == _armies[0] else 0
+        var rot : float = PI if army == _armies[0] else 0.0
         for i in range(squads_per_army):
             var s : Squad = squad_scene.instantiate()
             add_child(s)
             army.Add(s)
             var st : Squad.SquadType = Squad.SquadType.INFANTRY if i != 1 else Squad.SquadType.CAVALRY
-            s.Initialize(army, 15, st, Squad.Formation.TRIPLELINE) # DOUBLELINE)
+            s.Initialize(army, 15, st, Squad.Formation.TRIPLELINE, rnd) # DOUBLELINE)
             s.position.x = 20 + (1 + i) * (1130 - 20) / float(squads_per_army + 1)
             s.position.y = 23 + (0 + dy) * (627 - 23) / 8.0
             s.rotation = rot

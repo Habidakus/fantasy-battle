@@ -10,12 +10,37 @@ enum Formation { LINE, DOUBLELINE, TRIPLELINE, SQUARE, SKIRMISH, COLUMN }
 # Skirmish - increased melee damage taken, reduced missile and artillery damage taken
 # Column - Extra movement, reduced damage dealt from melee and missile, extra damage from artillery
 
+var _turn_order_tie_breaker : float
+var _next_move : float
+var _army : Army
 var initial_size : float
 var shape : ColorRect
 var icons : Node2D
 var units : Array[Unit]
 var formation : Formation = Formation.DOUBLELINE
 var squadType : SquadType = SquadType.INFANTRY
+
+func GetArmy() -> Army:
+    return _army
+
+func IsDead() -> bool:
+    if units.is_empty():
+        return true
+    for unit : Unit in units:
+        if unit._is_alive:
+            return false
+    return true
+
+func GetSortedMoves(game_state : GameState) -> Array[MMCAction]:
+    # ArmyControllerAction
+    var ret_val : Array[MMCAction]
+    if game_state.IsInCombat(self):
+        ret_val.append(ArmyControllerAction.CreateMelee(self))
+    else:
+        ret_val.append(ArmyControllerAction.CreatePass(self))
+        for enemy : Squad in game_state.GetAllChargableEnemy(self):
+            ret_val.append(ArmyControllerAction.CreateCharge(self, enemy))
+    return ret_val
 
 static func CalculateDieMods(attacker : Formation, defender : Formation, damageType : DamageType) -> Vector2i:
     match damageType:
@@ -234,12 +259,18 @@ static func CalculateDieMods_DefenderAgainstMelee(defender : Formation) -> int:
             return 0
 
 # s.Initialize(army, 15, Squad.SquadType.INFANTRY, Squad.Formation.DOUBLELINE)
-func Initialize(army : Army, count : int, st : SquadType, form : Formation) -> void:
+func Initialize(army : Army, count : int, st : SquadType, form : Formation, rnd : RandomNumberGenerator) -> void:
+    _army = army
     SetSquadType(st)
     SetFormation(form)
+    _turn_order_tie_breaker = rnd.randf()
+    _next_move = 0
     shape.color = army.GetColor()
     for i in range(count):
         units.append(Unit.new())
+
+func GetNextMove() -> float:
+    return _next_move
 
 func _ready() -> void:
     shape = find_child("ColorRect") as ColorRect

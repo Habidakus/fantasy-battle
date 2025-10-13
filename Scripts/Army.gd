@@ -16,6 +16,9 @@ func SetController(controller : ArmyController) -> void:
 func GetColor() -> Color:
     return _color
 
+func GetController() -> AIArmyController:
+    return _controller
+
 func RegisterSquads(turn_engine : TurnEngine) -> void:
     for squad : Squad in _squads:
         turn_engine.Add(squad)
