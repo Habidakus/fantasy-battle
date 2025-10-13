@@ -29,6 +29,7 @@ func get_best_action(game_state : MMCGameState, depth : int = _max_int) -> MMCAc
     if result == null:
         return null
     else:
+        print(str(result.action) + " : " + str(result.score))
         return result.action
 
 func _get_best_action_internal(game_state : MMCGameState, actorsLowerBound: MMCScore, actorsUpperBound: MMCScore, depth : int, color : int) -> MMCResult:
@@ -56,6 +57,8 @@ func _get_best_action_internal(game_state : MMCGameState, actorsLowerBound: MMCS
         var result : MMCResult = _get_best_action_internal(post_action_state, actorsUpperBoundReversed, actorsLowerBoundReversed, depth - 1, 0 - color)
 
         var reversed_score : MMCScore = result.score.reversed()
+        if depth == 8:
+            print("  considering " + str(action) + " = " + str(reversed_score))
         if best == null:
             best = MMCResult.create(action, reversed_score)
         elif reversed_score.is_better_than(best.score):

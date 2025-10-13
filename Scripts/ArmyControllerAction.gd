@@ -8,6 +8,25 @@ var _target : Squad
 var _position : Vector2
 var _rotation : float
 
+func _to_string() -> String:
+    if _squad == null:
+        assert(_action == Action.PASS)
+        return "Controller passes"
+    var squad_name : String = "%s's %s" % [_squad.GetArmy().GetController(), _squad]
+    match _action:
+        Action.PASS:
+            return "%s will wait" % [squad_name]
+        Action.MELEE:
+            var target_name : String = str(_target)
+            return "%s will charge" % [squad_name, target_name]
+        Action.CHARGE:
+            var target_name : String = str(_target)
+            return "%s will charge" % [squad_name, target_name]
+        Action.MOVE:
+            return "%s will move" % [squad_name]
+        _:
+            return "%s will perform unknown action: %s" % [squad_name, Action.keys()[_action]]
+
 func Apply(game_state : GameState) -> void:
     match _action:
         Action.PASS:
@@ -22,26 +41,38 @@ func Apply(game_state : GameState) -> void:
             assert(false, "Unknown action type: " + Action.keys()[_action])
 
 func _apply_pass(game_state : GameState) -> void:
-    game_state.DelaySquad(_squad.id, 2)
+    if _squad != null:
+        game_state.DelaySquad(_squad.id, 2)
+    game_state.AssignNextSquadToGo()
 
 func _apply_melee(game_state : GameState) -> void:
     game_state.InflictDamage(_squad.id, _target.id, Squad.DamageType.MELEE)
-    game_state.DelaySquad(_squad.id, 3)
+    game_state.RemoveSquadIfDead(_target.id)
+    if not game_state.RemoveSquadIfDead(_squad.id):
+        game_state.DelaySquad(_squad.id, 3)
+    game_state.AssignNextSquadToGo()
 
 func _apply_charge(game_state : GameState) -> void:
+    game_state.MoveTowardsTarget(_squad.id, _target.id)
     game_state.InflictDamage(_squad.id, _target.id, Squad.DamageType.CHARGE)
-    game_state.Move(_squad.id, _target.id)
-    game_state.DelaySquad(_squad.id, 3)
+    game_state.RemoveSquadIfDead(_target.id)
+    if not game_state.RemoveSquadIfDead(_squad.id):
+        game_state.DelaySquad(_squad.id, 3)
+    game_state.AssignNextSquadToGo()
 
 func _apply_move(game_state : GameState) -> void:
-    game_state.Move(_squad.id, _position, _rotation)
+    game_state.MoveAtAngle(_squad.id, _position, _rotation)
     game_state.DelaySquad(_squad.id, 3)
+    game_state.AssignNextSquadToGo()
 
 static func _create(squad : Squad, action : Action) -> ArmyControllerAction:
     var ret_val :ArmyControllerAction = ArmyControllerAction.new()
     ret_val._action = action
     ret_val._squad = squad
     return ret_val
+
+static func CreateSidePass(_controller : ArmyController) -> ArmyControllerAction:
+    return ArmyControllerAction.new()
 
 static func CreateMelee(squad : Squad) -> ArmyControllerAction:
     return ArmyControllerAction._create(squad, Action.MELEE)
@@ -50,6 +81,7 @@ static func CreatePass(squad : Squad) -> ArmyControllerAction:
     return ArmyControllerAction._create(squad, Action.PASS)
 
 static func CreateCharge(squad : Squad, target : Squad) -> ArmyControllerAction:
+    assert(squad.GetArmy() != target.GetArmy())
     var ret_val : ArmyControllerAction = ArmyControllerAction._create(squad, Action.CHARGE)
     ret_val._target = target
     return ret_val

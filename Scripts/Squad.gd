@@ -19,11 +19,24 @@ var _army : Army
 var _speed : float = 30
 var _units_healthy : int
 var _units_wounded : int
+var _default_die_sides : int = 6
 var initial_size : float
 var shape : ColorRect
 var icons : Node2D
 var _formation : Formation = Formation.DOUBLELINE
 var _squad_type : SquadType = SquadType.INFANTRY
+
+func _to_string() -> String:
+    var health : String = "(%d)" % [_units_healthy] if _units_wounded == 0 else "(%d/%d)" % [_units_healthy, _units_wounded]
+    match _squad_type:
+        SquadType.INFANTRY:
+            return "Infantry#%d%s" % [id, health]
+        SquadType.CAVALRY:
+            return "Cavalry#%d%s" % [id, health]
+        SquadType.ARTILLERY:
+            return "Cannon#%d%s" % [id, health]
+        _:
+            return "???#%d%s" % [id, health]
 
 func Clone() -> Squad:
     var ret_val : Squad = Squad.new()
@@ -35,6 +48,7 @@ func Clone() -> Squad:
     ret_val._units_wounded = _units_wounded
     ret_val._formation = _formation
     ret_val._squad_type = _squad_type
+    ret_val._default_die_sides = _default_die_sides
     ret_val.id = id
     return ret_val
 
@@ -45,7 +59,7 @@ func GetUnits() -> int:
     return _units_healthy + _units_wounded
 
 func IsDead() -> bool:
-    return _units_healthy + _units_wounded == 0
+    return _units_healthy + _units_wounded <= 0
 
 func GetChargeDistance() -> float:
     # TODO: Charge distance should change by formation & squad type
@@ -55,16 +69,63 @@ func CanCharge(enemy : Squad) -> bool:
     # TODO: Add cost to turn towards closest spot on enemy
     return enemy.position.distance_to(position) < GetChargeDistance()
 
+func InflictWound(rnd : RandomNumberGenerator) -> void:
+    if IsDead():
+        return
+    if _units_wounded > 0:
+        if rnd.randi() % GetUnits() < _units_wounded:
+            _units_wounded -= 1
+            return
+    _units_healthy -= 1
+    _units_wounded += 1
+
+func GetRoll(rnd : RandomNumberGenerator, mods : int, disadvantage : bool) -> int:
+    if _units_wounded > 0:
+        if rnd.randi() % GetUnits() < _units_wounded:
+            mods -= 1
+    var sides : int = max(1, _default_die_sides + mods)
+    var roll : int = rnd.randi() % sides
+    if disadvantage:
+        roll = min(roll, rnd.randi() % sides)
+    return roll
+
 func GetSortedMoves(game_state : GameState) -> Array[MMCAction]:
     # ArmyControllerAction
     var ret_val : Array[MMCAction]
     if game_state.IsInCombat(self):
         ret_val.append(ArmyControllerAction.CreateMelee(self))
     else:
-        ret_val.append(ArmyControllerAction.CreatePass(self))
         for enemy : Squad in game_state.GetAllChargableEnemy(self):
             ret_val.append(ArmyControllerAction.CreateCharge(self, enemy))
+        ret_val.append(ArmyControllerAction.CreatePass(self))
     return ret_val
+
+static func GetSumOfSquares(d : int) -> int:
+    match d:
+        1: return 1
+        2: return 5
+        3: return 14
+        4: return 30
+        5: return 55
+        6: return 91
+        7: return 140
+        8: return 204
+        9: return 285
+        9: return 385
+        _: return GetSumOfSquares(d - 1)
+
+func GetBaseScore() -> float:
+    var ret_val : float = _units_healthy * (1 + _default_die_sides) / 2.0
+    if _units_wounded > 0:
+        ret_val += _units_wounded * _default_die_sides / 2.0
+        # this is the code to calculate when we have weakness
+        # ret_val += _units_wounded * GetSumOfSquares(_default_die_sides) / float(_default_die_sides * _default_die_sides)
+    return ret_val
+
+func GetClosenessScore(our_score : float, enemy_score : float, dist_squared : float) -> float:
+    var diff_score : float = our_score - enemy_score
+    var turns_away : int = max(1, int(ceil(sqrt(dist_squared) / _speed)))
+    return (our_score + enemy_score + diff_score) / (turns_away * turns_away)
 
 static func CalculateDieMods(attacker : Formation, defender : Formation, damageType : DamageType) -> Vector2i:
     match damageType:
@@ -79,6 +140,10 @@ static func CalculateDieMods(attacker : Formation, defender : Formation, damageT
         _:
             assert(false, "Unknown Damage Type: " + str(damageType))
             return Vector2i(0, 0)
+
+func GetDieCountInDefense() -> int:
+    # TODO: Later on we need to consider flanking, and if more than one side being attacked
+    return GetWidthAndRanks().x
 
 func GetDieCountInAttack(damageType : DamageType) -> int:
     match damageType:
