@@ -18,13 +18,13 @@ func GenerateGameState(squad : Squad) -> GameState:
     return GameState.Create(squad, _armies)
 
 func _OnStateEnter_DetermineWhoGoesNext() -> void:
-    _turn_order.sort_custom(Callable(self, "_order_squads"))
+    _turn_order.sort_custom(Callable(self, "OrderSquads"))
     while _turn_order.back().IsDead():
         _turn_order.pop_back()
     var controller : ArmyController = _turn_order.front().GetArmy().GetController()
     controller.RequestOrders(_turn_order.front())
 
-func _order_squads(left : Squad, right : Squad) -> bool:
+static func OrderSquads(left : Squad, right : Squad) -> bool:
     var leftIsDead : bool = left.IsDead()
     var rightIsDead : bool = right.IsDead()
     if leftIsDead != rightIsDead:

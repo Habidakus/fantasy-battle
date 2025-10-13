@@ -1,5 +1,7 @@
 class_name Squad extends Node2D
 
+static var s_NEXT_ID : int = 0
+
 enum DamageType { MELEE, CHARGE, MISSLE, ARTILLERY }
 enum SquadType { INFANTRY, CAVALRY, ARTILLERY }
 enum Formation { LINE, DOUBLELINE, TRIPLELINE, SQUARE, SKIRMISH, COLUMN }
@@ -10,26 +12,48 @@ enum Formation { LINE, DOUBLELINE, TRIPLELINE, SQUARE, SKIRMISH, COLUMN }
 # Skirmish - increased melee damage taken, reduced missile and artillery damage taken
 # Column - Extra movement, reduced damage dealt from melee and missile, extra damage from artillery
 
+var id : int
 var _turn_order_tie_breaker : float
 var _next_move : float
 var _army : Army
+var _speed : float = 30
+var _units_healthy : int
+var _units_wounded : int
 var initial_size : float
 var shape : ColorRect
 var icons : Node2D
-var units : Array[Unit]
-var formation : Formation = Formation.DOUBLELINE
-var squadType : SquadType = SquadType.INFANTRY
+var _formation : Formation = Formation.DOUBLELINE
+var _squad_type : SquadType = SquadType.INFANTRY
+
+func Clone() -> Squad:
+    var ret_val : Squad = Squad.new()
+    ret_val._turn_order_tie_breaker = _turn_order_tie_breaker
+    ret_val._next_move = _next_move
+    ret_val._army = _army
+    ret_val._speed = _speed
+    ret_val._units_healthy = _units_healthy
+    ret_val._units_wounded = _units_wounded
+    ret_val._formation = _formation
+    ret_val._squad_type = _squad_type
+    ret_val.id = id
+    return ret_val
 
 func GetArmy() -> Army:
     return _army
 
+func GetUnits() -> int:
+    return _units_healthy + _units_wounded
+
 func IsDead() -> bool:
-    if units.is_empty():
-        return true
-    for unit : Unit in units:
-        if unit._is_alive:
-            return false
-    return true
+    return _units_healthy + _units_wounded == 0
+
+func GetChargeDistance() -> float:
+    # TODO: Charge distance should change by formation & squad type
+    return _speed
+
+func CanCharge(enemy : Squad) -> bool:
+    # TODO: Add cost to turn towards closest spot on enemy
+    return enemy.position.distance_to(position) < GetChargeDistance()
 
 func GetSortedMoves(game_state : GameState) -> Array[MMCAction]:
     # ArmyControllerAction
@@ -72,13 +96,13 @@ func GetDieCountInAttack(damageType : DamageType) -> int:
 
 func GetDieCountInAttack_Melee() -> int:
     var widthAndRanks : Vector2i = GetWidthAndRanks()
-    match formation:
+    match _formation:
         Formation.LINE:
             return widthAndRanks.x
         Formation.DOUBLELINE:
-            return int(ceil(min(float(units.size()), widthAndRanks.x * 1.5)))
+            return int(ceil(min(float(GetUnits()), widthAndRanks.x * 1.5)))
         Formation.TRIPLELINE:
-            return min(units.size(), widthAndRanks.x * 2)
+            return min(GetUnits(), widthAndRanks.x * 2)
         Formation.SQUARE:
             return widthAndRanks.x
         Formation.SKIRMISH:
@@ -91,32 +115,32 @@ func GetDieCountInAttack_Melee() -> int:
 
 func GetDieCountInAttack_Charge() -> int:
     var widthAndRanks : Vector2i = GetWidthAndRanks()
-    match formation:
+    match _formation:
         Formation.LINE:
             return widthAndRanks.x
         Formation.DOUBLELINE:
-            return min(units.size(), widthAndRanks.x * 2)
+            return min(GetUnits(), widthAndRanks.x * 2)
         Formation.TRIPLELINE:
-            return min(units.size(), widthAndRanks.x * 3)
+            return min(GetUnits(), widthAndRanks.x * 3)
         Formation.SQUARE:
             return widthAndRanks.x
         Formation.SKIRMISH:
             return widthAndRanks.x
         Formation.COLUMN:
-            return min(units.size(), widthAndRanks.x * 3)
+            return min(GetUnits(), widthAndRanks.x * 3)
         _:
             assert(false)
             return 0
 
 func GetDieCountInAttack_Missile() -> int:
-    if formation == Formation.COLUMN:
-        return min(units.size(), GetWidthAndRanks().x * 3)
+    if _formation == Formation.COLUMN:
+        return min(GetUnits(), GetWidthAndRanks().x * 3)
     else:
-        return units.size()
+        return GetUnits()
         
 func GetDieCountInAttack_Artillery() -> int:
-    if formation == Formation.LINE || formation == Formation.SKIRMISH:
-        return units.size()
+    if _formation == Formation.LINE || _formation == Formation.SKIRMISH:
+        return GetUnits()
     else:
         return GetWidthAndRanks().x
 
@@ -266,8 +290,10 @@ func Initialize(army : Army, count : int, st : SquadType, form : Formation, rnd 
     _turn_order_tie_breaker = rnd.randf()
     _next_move = 0
     shape.color = army.GetColor()
-    for i in range(count):
-        units.append(Unit.new())
+    _units_healthy = count
+    _units_wounded = 0
+    s_NEXT_ID += 1
+    id = s_NEXT_ID
 
 func GetNextMove() -> float:
     return _next_move
@@ -300,14 +326,13 @@ static func GetUnitDim(st : SquadType) -> Vector2:
             return Vector2(10,10)
 
 func GetWidthAndRanks() -> Vector2i:
-    var unit_dim : Vector2 = GetUnitDim(squadType)
-    var unit_count : int = units.size()
-    match formation:
+    var unit_dim : Vector2 = GetUnitDim(_squad_type)
+    match _formation:
         Formation.LINE:
-            return Vector2i(unit_count, 1)
+            return Vector2i(GetUnits(), 1)
         Formation.DOUBLELINE:
             var ranks : int = 2
-            var width : int = ceil(float(unit_count) / float(ranks))
+            var width : int = ceil(float(GetUnits()) / float(ranks))
             if ranks > width:
                 var t = ranks
                 ranks = width
@@ -315,40 +340,39 @@ func GetWidthAndRanks() -> Vector2i:
             return Vector2i(width, ranks)
         Formation.TRIPLELINE:
             var ranks : int = 3
-            var width : int = ceil(float(unit_count) / float(ranks))
+            var width : int = ceil(float(GetUnits()) / float(ranks))
             if ranks > width:
                 var t = ranks
                 ranks = width
                 width = t
             return Vector2i(width, ranks)
         Formation.SQUARE:
-            var s : float = sqrt(unit_count)
+            var s : float = sqrt(GetUnits())
             var ranks : int = floor(s)
             var width : int = ceil(s)
-            if ranks * width < unit_count:
+            if ranks * width < GetUnits():
                 ranks += 1
             return Vector2i(width, ranks)
         Formation.SKIRMISH:
-            var s : int = int(ceil(sqrt(unit_count)))
+            var s : int = int(ceil(sqrt(GetUnits())))
             return Vector2i(s, s)
         Formation.COLUMN:
-            var width : int = ceil(pow(unit_count, 0.333))
-            var ranks : int = ceil(unit_count / float(width))
+            var width : int = ceil(pow(GetUnits(), 0.333))
+            var ranks : int = ceil(GetUnits() / float(width))
             return Vector2(width, ranks)
         _:
-            assert(false, "GetWidthAndRanks() with unknown formation: " + str(formation))
-            var s : int = int(ceil(sqrt(unit_count)))
+            assert(false, "GetWidthAndRanks() with unknown formation: " + str(_formation))
+            var s : int = int(ceil(sqrt(GetUnits())))
             return Vector2i(s, s)
 
 func GetDim() -> Vector2:
-    var unit_dim : Vector2 = GetUnitDim(squadType)
-    var unit_count : int = units.size()
-    match formation:
+    var unit_dim : Vector2 = GetUnitDim(_squad_type)
+    match _formation:
         Formation.LINE:
-            return Vector2(unit_dim.x * unit_count, unit_dim.y)
+            return Vector2(unit_dim.x * GetUnits(), unit_dim.y)
         Formation.DOUBLELINE:
             var ranks : int = 2
-            var width : int = ceil(float(unit_count) / float(ranks))
+            var width : int = ceil(float(GetUnits()) / float(ranks))
             if ranks > width:
                 var t = ranks
                 ranks = width
@@ -356,36 +380,36 @@ func GetDim() -> Vector2:
             return Vector2(unit_dim.x * width, unit_dim.y * ranks)
         Formation.TRIPLELINE:
             var ranks : int = 3
-            var width : int = ceil(float(unit_count) / float(ranks))
+            var width : int = ceil(float(GetUnits()) / float(ranks))
             if ranks > width:
                 var t = ranks
                 ranks = width
                 width = t
             return Vector2(unit_dim.x * width, unit_dim.y * ranks)
         Formation.SQUARE:
-            var s : float = sqrt(unit_count)
+            var s : float = sqrt(GetUnits())
             var ranks : int = floor(s)
             var width : int = ceil(s)
-            if ranks * width < unit_count:
+            if ranks * width < GetUnits():
                 ranks += 1
             return Vector2(unit_dim.x * width, unit_dim.y * ranks)
         Formation.SKIRMISH:
-            var s : float = ceil(sqrt(unit_count))
+            var s : float = ceil(sqrt(GetUnits()))
             return Vector2(unit_dim.x * s * 1.5, unit_dim.y * s * 1.5)
         Formation.COLUMN:
-            var width : int = ceil(pow(unit_count, 0.333))
-            var ranks : int = ceil(unit_count / float(width))
+            var width : int = ceil(pow(GetUnits(), 0.333))
+            var ranks : int = ceil(GetUnits() / float(width))
             return Vector2(unit_dim.x * width, unit_dim.y * ranks)
         _:
-            assert(false, "GetDim() with unknown formation: " + str(formation))
-            return unit_dim * sqrt(unit_count)
+            assert(false, "GetDim() with unknown formation: " + str(_formation))
+            return unit_dim * sqrt(GetUnits())
 
 func SetSquadType(st : SquadType) -> void:
-    squadType = st
+    _squad_type = st
     var cavalryIcon = find_child("Cavalry") as Line2D
     var artilleryIcon = find_child("Artillery") as Line2D
     var infantryIcon = find_child("Infantry") as Line2D
-    match squadType:
+    match _squad_type:
         SquadType.CAVALRY:
             cavalryIcon.show()
             infantryIcon.hide()
@@ -400,4 +424,4 @@ func SetSquadType(st : SquadType) -> void:
             artilleryIcon.show()
             
 func SetFormation(form : Formation) -> void:
-    formation = form
+    _formation = form
