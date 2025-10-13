@@ -1,0 +1,42 @@
+[gd_scene load_steps=4 format=3 uid="uid://d1p8p600hicdl"]
+
+[ext_resource type="Script" uid="uid://bkpwngojnbbgs" path="res://Scripts/TurnEngine.gd" id="2_bwj1n"]
+[ext_resource type="Script" uid="uid://plod6tg2sw8o" path="res://Scripts/StateDetermineWhoGoesNext.gd" id="3_bwj1n"]
+[ext_resource type="Script" uid="uid://cfwv1w01lwr2y" path="res://addons/statemachine/StateMachineState.gd" id="3_d3424"]
+
+[node name="TurnEngine" type="Node" node_paths=PackedStringArray("initial_state")]
+script = ExtResource("2_bwj1n")
+initial_state = NodePath("State_AwaitingConfiguration")
+metadata/_custom_type_script = "uid://da4jmxbeqpsyh"
+
+[node name="State_AwaitingConfiguration" type="Control" parent="."]
+layout_mode = 3
+anchors_preset = 0
+offset_right = 40.0
+offset_bottom = 40.0
+script = ExtResource("3_d3424")
+metadata/_custom_type_script = "uid://cfwv1w01lwr2y"
+
+[node name="State_DetermineWhoGoesNext" type="Control" parent="."]
+layout_mode = 3
+anchors_preset = 0
+offset_right = 40.0
+offset_bottom = 40.0
+script = ExtResource("3_bwj1n")
+metadata/_custom_type_script = "uid://cfwv1w01lwr2y"
+
+[node name="State_AwaitSquadOrders" type="Control" parent="."]
+layout_mode = 3
+anchors_preset = 0
+offset_right = 40.0
+offset_bottom = 40.0
+script = ExtResource("3_d3424")
+metadata/_custom_type_script = "uid://cfwv1w01lwr2y"
+
+[node name="State_ProcessOrders" type="Control" parent="."]
+layout_mode = 3
+anchors_preset = 0
+offset_right = 40.0
+offset_bottom = 40.0
+script = ExtResource("3_d3424")
+metadata/_custom_type_script = "uid://cfwv1w01lwr2y"

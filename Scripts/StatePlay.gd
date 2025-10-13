@@ -1,7 +1,9 @@
 class_name StatePlay extends StateMachineState
 
 @export var squad_scene : PackedScene = preload("res://Scenes/squad.tscn")
+@export var turn_engine_scene : PackedScene = preload("res://Scenes/TurnEngine.tscn")
 
+var _turn_engine : TurnEngine
 var _mist_parallax_layer : ParallaxLayer
 var _mist_direction : float
 var _mist_speed : float
@@ -20,8 +22,11 @@ func _ready() -> void:
     _armies[0].SetColor(Color.LIGHT_CYAN)
     _armies.append(Army.new())
     _armies[1].SetColor(Color.LIGHT_GOLDENROD)
+    _turn_engine = turn_engine_scene.instantiate() as TurnEngine
+    add_child(_turn_engine)
     const squads_per_army : int = 3
     for army : Army in _armies:
+        army.SetController(AIArmyController.new())
         var dy = 1 if army == _armies[0] else 7
         var rot : float = PI if army == _armies[0] else 0
         for i in range(squads_per_army):
@@ -33,6 +38,7 @@ func _ready() -> void:
             s.position.x = 20 + (1 + i) * (1130 - 20) / float(squads_per_army + 1)
             s.position.y = 23 + (0 + dy) * (627 - 23) / 8.0
             s.rotation = rot
+    _turn_engine.Config(_armies)
     
 func _process(delta: float) -> void:
     _mist_direction += delta * ((rnd.randf() * 1) - 0.5)
