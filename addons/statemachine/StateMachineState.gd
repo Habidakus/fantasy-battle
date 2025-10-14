@@ -16,19 +16,19 @@ var _on_complete_callback : Callable
 ## it calls into the state's [method init_state] function. Your own extensions of StateMachineState
 ## can implement their own version of init_state(), just be sure to call [code]super.init_state(state_machine)[/code] within your own implementation.
 func init_state(state_machine: StateMachine) -> void:
-    _active_process_mode = self.process_mode
-    our_state_machine = state_machine
-    self.process_mode = ProcessMode.PROCESS_MODE_DISABLED
-    self.hide()
+	_active_process_mode = self.process_mode
+	our_state_machine = state_machine
+	self.process_mode = ProcessMode.PROCESS_MODE_DISABLED
+	self.hide()
 
 ## When your state is started up, the [method enter_state] function will be called. Be sure to also invoke the parent function with [code]super.enter_state()[/code]
 func enter_state() -> void:
-    self.process_mode = _active_process_mode
-    self.show()
-    state_enter.emit()
+	self.process_mode = _active_process_mode
+	self.show()
+	state_enter.emit()
 
 func _set_completion_call(callback_on_exit_complete : Callable) -> void:
-    _on_complete_callback = callback_on_exit_complete
+	_on_complete_callback = callback_on_exit_complete
 
 ## When your state has been told to shutdown, because we are transitioning to another state, this
 ## function will be called. If you implement your own version of [method exit_state] then you must,
@@ -37,7 +37,7 @@ func _set_completion_call(callback_on_exit_complete : Callable) -> void:
 ## to perform some cleanup, or fade out a schene, or perform some exit code... delaying until done
 ## and only then calling [code]super.exit_state(next_method)[/code]
 func exit_state(_next_state: StateMachineState) -> void:
-    self.process_mode = ProcessMode.PROCESS_MODE_DISABLED
-    self.hide()
-    state_exit.emit()
-    _on_complete_callback.call()
+	self.process_mode = ProcessMode.PROCESS_MODE_DISABLED
+	self.hide()
+	state_exit.emit()
+	_on_complete_callback.call()
