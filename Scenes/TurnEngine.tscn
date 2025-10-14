@@ -1,8 +1,9 @@
-[gd_scene load_steps=4 format=3 uid="uid://d1p8p600hicdl"]
+[gd_scene load_steps=5 format=3 uid="uid://d1p8p600hicdl"]
 
 [ext_resource type="Script" uid="uid://bkpwngojnbbgs" path="res://Scripts/TurnEngine.gd" id="2_bwj1n"]
 [ext_resource type="Script" uid="uid://plod6tg2sw8o" path="res://Scripts/StateDetermineWhoGoesNext.gd" id="3_bwj1n"]
 [ext_resource type="Script" uid="uid://cfwv1w01lwr2y" path="res://addons/statemachine/StateMachineState.gd" id="3_d3424"]
+[ext_resource type="Script" uid="uid://yho3bs6w7wb2" path="res://Scripts/State_ProcessOrders.gd" id="4_bwj1n"]
 
 [node name="TurnEngine" type="Node" node_paths=PackedStringArray("initial_state")]
 script = ExtResource("2_bwj1n")
@@ -38,5 +39,5 @@ layout_mode = 3
 anchors_preset = 0
 offset_right = 40.0
 offset_bottom = 40.0
-script = ExtResource("3_d3424")
+script = ExtResource("4_bwj1n")
 metadata/_custom_type_script = "uid://cfwv1w01lwr2y"
