@@ -18,4 +18,5 @@ func RequestOrders(squad : Squad) -> void:
 func RegisterTurnEngine(turn_engine : TurnEngine) -> void:
 	_turn_engine = turn_engine
 	s_NEXT_ID += 1
+	assert(s_NEXT_ID < 5)
 	_name = "AI#%d" % [s_NEXT_ID]

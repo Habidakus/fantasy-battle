@@ -1,8 +1,9 @@
-class_name Unit extends Object
+class_name Unit extends RefCounted
 
 var _is_alive : bool = true
 var _is_wounded : bool = false
 var _default_die_sides : int = 6
+var _jcounter : JCounter = JCounter.Create("Unit")
 
 # Combat idea
 #  - Each unit gets one roll

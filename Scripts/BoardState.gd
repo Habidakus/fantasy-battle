@@ -2,6 +2,7 @@ class_name BoardState extends RefCounted
 
 var _armies : Array[Army]
 var _turn_order : Array[Squad]
+var _jcounter : JCounter = JCounter.Create("BoardState")
 
 func Clone() -> BoardState:
 	var ret_val : BoardState = BoardState.new()

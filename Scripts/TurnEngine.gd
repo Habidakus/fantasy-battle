@@ -2,6 +2,7 @@ class_name TurnEngine extends StateMachine
 
 var _board_state : BoardState = BoardState.new()
 var _pending_action : ArmyControllerAction
+var _jcounter : JCounter = JCounter.Create("TurnEngine")
 
 func Config(armies : Array[Army]) -> void:
 	_board_state.Config(armies)

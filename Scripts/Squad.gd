@@ -25,9 +25,10 @@ var shape : ColorRect
 var icons : Node2D
 var _formation : Formation = Formation.DOUBLELINE
 var _squad_type : SquadType = SquadType.INFANTRY
+var _jcounter : JCounter = JCounter.Create("Squad")
 
 func _to_string() -> String:
-	var health : String = "(%d)" % [_units_healthy] if _units_wounded == 0 else "(%d/%d)" % [_units_healthy, _units_wounded]
+	var health : String = "(%d)[%d]" % [_units_healthy, _next_move] if _units_wounded == 0 else "(%d/%d)[%d]" % [_units_healthy, _units_wounded, _next_move]
 	match _squad_type:
 		SquadType.INFANTRY:
 			return "Infantry#%d%s" % [id, health]

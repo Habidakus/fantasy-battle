@@ -4,6 +4,7 @@ var _pending_board_state : BoardState = null
 var _from : Dictionary = {}
 var _lerp_val : float = 0
 var _rnd : RandomNumberGenerator = RandomNumberGenerator.new()
+var _jcounter : JCounter = JCounter.Create("StateProcessOrders")
 
 func _process(delta: float) -> void:
 	if _pending_board_state == null:
@@ -48,5 +49,5 @@ func exit_state(_next_state: StateMachineState) -> void:
 	_pending_board_state = null
 	_from = {}
 	_lerp_val = 0
-	print("Process complete: %s" % [our_state_machine._pending_action])
+	#print("Process complete: %s" % [our_state_machine._pending_action])
 	super.exit_state(_next_state)

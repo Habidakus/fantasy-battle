@@ -7,6 +7,7 @@ var _action : Action
 var _target : Squad
 var _position : Vector2
 var _rotation : float
+var _jcounter : JCounter = JCounter.Create("ArmyControllerAction")
 
 func _to_string() -> String:
 	if _squad == null:
@@ -18,10 +19,10 @@ func _to_string() -> String:
 			return "%s will wait" % [squad_name]
 		Action.MELEE:
 			var target_name : String = str(_target)
-			return "%s will charge" % [squad_name, target_name]
+			return "%s will charge %s" % [squad_name, target_name]
 		Action.CHARGE:
 			var target_name : String = str(_target)
-			return "%s will charge" % [squad_name, target_name]
+			return "%s will charge %s" % [squad_name, target_name]
 		Action.MOVE:
 			if _target != null:
 				var target_name : String = str(_target)
