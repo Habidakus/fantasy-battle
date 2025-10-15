@@ -33,14 +33,27 @@ func _process(delta: float) -> void:
 						if _lerp_val >= 1:
 							squad.rotation = pending_squad.rotation
 						else:
-							squad.rotation = data[1] + lerp_angle(data[1], pending_squad.rotation, _lerp_val)
+							squad.rotation = lerp_angle(data[1], pending_squad.rotation, _lerp_val)
 							did_work = true
 	if did_work:
 		_lerp_val += delta
 		our_state_machine.UpdateArmies()
 		return
+	
+	
+	for army : Army in old_board_state._armies:
+		for squad : Squad in army._squads:
+			if not _pending_board_state.HasSquad(squad.id):
+				print("TODO: Need to remove %s" % [squad])
+				continue
+			var pending_squad : Squad = _pending_board_state.GetSquadById(squad.id)
+			if pending_squad != null:
+				squad._units_healthy = pending_squad._units_healthy
+				squad._units_wounded = pending_squad._units_wounded
+				squad._next_move = pending_squad._next_move
+			
 	our_state_machine.switch_state("State_DetermineWhoGoesNext")
-
+	
 func enter_state() -> void:
 	super.enter_state()
 	print("Need to process order: %s" % [our_state_machine._pending_action])

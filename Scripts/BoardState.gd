@@ -125,6 +125,12 @@ func CurrentSquad() -> Squad:
 	return ret_val
 
 func OrderSquads() -> void:
+	
+	_turn_order.clear()
+	for army : Army in _armies:
+		for squad : Squad in army._squads:
+			if !squad.IsDead():
+				_turn_order.append(squad)
 	_turn_order.sort_custom(Callable(self, "IsFirstSquadSooner"))
 	while _turn_order.back().IsDead():
 		_turn_order.pop_back()
