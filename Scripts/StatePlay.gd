@@ -55,9 +55,7 @@ func UpdateSquad(squad : Squad) -> void:
 	if not _visible_squads.has(squad.id):
 		assert(false, str(squad) + " has no visible component")
 		return
-	var vs = _visible_squads[squad.id]
-	vs.position = squad.position
-	vs.rotation = squad.rotation
+	_visible_squads[squad.id].Update(squad)
 	
 func _process(delta: float) -> void:
 	_mist_direction += delta * ((rnd.randf() * 1) - 0.5)
