@@ -26,6 +26,8 @@ func get_score() -> AIScore:
 	return AIScore.Create(self)
 
 func get_sorted_moves(_for_requesting_player : bool) -> Array[MMCAction]:
+	if _squad == null:
+		return []
 	if _current_controller == _squad.GetArmy().GetController():
 		return _squad.GetSortedMoves(self)
 	else:
