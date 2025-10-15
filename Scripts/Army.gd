@@ -13,6 +13,25 @@ func Clone() -> Army:
 		ret_val.Add(s.Clone())
 	return ret_val
 
+func GetPrimaryColor() -> Color:
+	return _color
+
+func GetSecondaryColor() -> Color:
+	var h : float = _color.h + 0.5
+	if h > 1.0:
+		h -= 1.0
+	var s : float = _color.s
+	if s > 0.9:
+		s = 0.5
+	else:
+		s = 1.0
+	var v : float = _color.v
+	if v > 0.9:
+		v = 0.5
+	else:
+		v = 1.0
+	return Color.from_hsv(h, s, v)
+
 func Add(squad : Squad) -> void:
 	_squads.append(squad)
 

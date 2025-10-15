@@ -12,7 +12,7 @@ func increment(index : String) -> void:
 	_index = index
 	if _counts.has(index):
 		var f = _counts[index] + 1
-		assert(f < 999999)
+		assert(f < 9999)
 		_counts[index] = f
 	else:
 		_counts[index] = 1

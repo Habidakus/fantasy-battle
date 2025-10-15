@@ -1,4 +1,4 @@
-class_name Squad extends Node2D
+class_name Squad extends RefCounted
 
 static var s_NEXT_ID : int = 0
 
@@ -13,6 +13,8 @@ enum Formation { LINE, DOUBLELINE, TRIPLELINE, SQUARE, SKIRMISH, COLUMN }
 # Column - Extra movement, reduced damage dealt from melee and missile, extra damage from artillery
 
 var id : int
+var position : Vector2
+var rotation : float
 var _turn_order_tie_breaker : float
 var _next_move : float
 var _army : Army
@@ -20,9 +22,9 @@ var _speed : float = 30
 var _units_healthy : int
 var _units_wounded : int
 var _default_die_sides : int = 6
-var initial_size : float
-var shape : ColorRect
-var icons : Node2D
+#var initial_size : float
+#var shape : ColorRect
+#var icons : Node2D
 var _formation : Formation = Formation.DOUBLELINE
 var _squad_type : SquadType = SquadType.INFANTRY
 var _jcounter : JCounter = JCounter.Create("Squad")
@@ -360,7 +362,7 @@ func Initialize(army : Army, count : int, st : SquadType, form : Formation, rnd 
 	SetFormation(form)
 	_turn_order_tie_breaker = rnd.randf()
 	_next_move = 0
-	shape.color = army.GetColor()
+	#shape.color = army.GetColor()
 	_units_healthy = count
 	_units_wounded = 0
 	s_NEXT_ID += 1
@@ -370,19 +372,21 @@ func GetNextMove() -> float:
 	return _next_move
 
 func _ready() -> void:
-	shape = find_child("ColorRect") as ColorRect
-	icons = find_child("Icons") as Node2D
-	initial_size = shape.size.x
+	#shape = find_child("ColorRect") as ColorRect
+	#icons = find_child("Icons") as Node2D
+	#initial_size = shape.size.x
+	pass
 
 func _process(_delta: float) -> void:
-	if shape != null:
-		shape.size = GetDim()
-		shape.position = -shape.size / 2.0
-		if icons != null:
-			var icons_pos : float = min(-shape.position.x, -shape.position.y)
-			icons.position = Vector2(-icons_pos, -icons_pos)
-			var icons_scale : float = 2 * icons_pos / initial_size
-			icons.scale = Vector2(icons_scale, icons_scale)
+	#if shape != null:
+		#shape.size = GetDim()
+		#shape.position = -shape.size / 2.0
+		#if icons != null:
+			#var icons_pos : float = min(-shape.position.x, -shape.position.y)
+			#icons.position = Vector2(-icons_pos, -icons_pos)
+			#var icons_scale : float = 2 * icons_pos / initial_size
+			#icons.scale = Vector2(icons_scale, icons_scale)
+	pass
 
 static func GetUnitDim(st : SquadType) -> Vector2:
 	match st:
@@ -477,22 +481,22 @@ func GetDim() -> Vector2:
 
 func SetSquadType(st : SquadType) -> void:
 	_squad_type = st
-	var cavalryIcon = find_child("Cavalry") as Line2D
-	var artilleryIcon = find_child("Artillery") as Line2D
-	var infantryIcon = find_child("Infantry") as Line2D
-	match _squad_type:
-		SquadType.CAVALRY:
-			cavalryIcon.show()
-			infantryIcon.hide()
-			artilleryIcon.hide()
-		SquadType.INFANTRY:
-			cavalryIcon.show()
-			infantryIcon.show()
-			artilleryIcon.hide()
-		SquadType.ARTILLERY:
-			cavalryIcon.hide()
-			infantryIcon.hide()
-			artilleryIcon.show()
+	#var cavalryIcon = find_child("Cavalry") as Line2D
+	#var artilleryIcon = find_child("Artillery") as Line2D
+	#var infantryIcon = find_child("Infantry") as Line2D
+	#match _squad_type:
+	#	SquadType.CAVALRY:
+	#		cavalryIcon.show()
+	#		infantryIcon.hide()
+	#		artilleryIcon.hide()
+	#	SquadType.INFANTRY:
+	#		cavalryIcon.show()
+	#		infantryIcon.show()
+	#		artilleryIcon.hide()
+	#	SquadType.ARTILLERY:
+	#		cavalryIcon.hide()
+	#		infantryIcon.hide()
+	#		artilleryIcon.show()
 			
 func SetFormation(form : Formation) -> void:
 	_formation = form

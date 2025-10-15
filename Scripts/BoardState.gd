@@ -49,6 +49,13 @@ func GetNextSquadToGo() -> Squad:
 				ret_val = squad
 	return ret_val
 
+func HasSquad(id : int) -> bool:
+	for army : Army in _armies:
+		for squad : Squad in army._squads:
+			if squad.id == id:
+				return true
+	return false
+
 func GetSquadById(id : int) -> Squad:
 	for army : Army in _armies:
 		for squad : Squad in army._squads:
@@ -64,7 +71,7 @@ func DelaySquad(id : int, time : float) -> void:
 func MoveTowardsTarget(id : int, target_id : int) -> void:
 	var squad : Squad = GetSquadById(id)
 	var target : Squad = GetSquadById(target_id)
-	squad.look_at(target.global_position)
+	squad.rotation = (target.position - squad.position).angle()
 	var forward_dir : Vector2 = Vector2(1,0).rotated(squad.rotation)
 	var move_vec : Vector2 = squad._speed * forward_dir
 	squad.position += move_vec

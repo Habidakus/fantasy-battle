@@ -14,6 +14,8 @@ func _process(delta: float) -> void:
 	var did_work : bool = false
 	for army : Army in old_board_state._armies:
 		for squad : Squad in army._squads:
+			if not _pending_board_state.HasSquad(squad.id):
+				continue
 			var pending_squad : Squad = _pending_board_state.GetSquadById(squad.id)
 			if pending_squad != null:
 				if not _from.has(int(pending_squad.id)):
@@ -35,6 +37,7 @@ func _process(delta: float) -> void:
 							did_work = true
 	if did_work:
 		_lerp_val += delta
+		our_state_machine.UpdateArmies()
 		return
 	our_state_machine.switch_state("State_DetermineWhoGoesNext")
 

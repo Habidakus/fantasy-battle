@@ -1,0 +1,41 @@
+[gd_scene load_steps=2 format=3 uid="uid://c4vwf4nsdnyut"]
+
+[ext_resource type="Script" uid="uid://64vyq7v7e8eo" path="res://Scripts/VisibleSquad.gd" id="1_hdorc"]
+
+[node name="VisibleSquad" type="Node2D"]
+script = ExtResource("1_hdorc")
+
+[node name="CoatOfArms" type="Node2D" parent="."]
+
+[node name="Infantry" type="Node2D" parent="CoatOfArms"]
+
+[node name="PrimaryColor1" type="Polygon2D" parent="CoatOfArms/Infantry"]
+color = Color(0, 0, 1, 1)
+polygon = PackedVector2Array(-10, -10, 10, -10, 0, 0)
+
+[node name="PrimaryColor2" type="Polygon2D" parent="CoatOfArms/Infantry"]
+color = Color(0, 0, 1, 1)
+polygon = PackedVector2Array(-10, 10, 10, 10, 0, 0)
+
+[node name="SecondaryColor1" type="Polygon2D" parent="CoatOfArms/Infantry"]
+color = Color(1, 0, 0, 1)
+polygon = PackedVector2Array(-10, -10, -10, 10, 0, 0)
+
+[node name="SecondaryColor2" type="Polygon2D" parent="CoatOfArms/Infantry"]
+color = Color(1, 0, 0, 1)
+polygon = PackedVector2Array(10, -10, 10, 10, 0, 0)
+
+[node name="Calvary" type="Node2D" parent="CoatOfArms"]
+
+[node name="PrimaryColor" type="Polygon2D" parent="CoatOfArms/Calvary"]
+color = Color(0, 0, 1, 1)
+polygon = PackedVector2Array(-10, -10, 10, -10, 10, 10)
+
+[node name="SecondaryColor" type="Polygon2D" parent="CoatOfArms/Calvary"]
+color = Color(1, 0, 0, 1)
+polygon = PackedVector2Array(-10, -10, -10, 10, 10, 10)
+
+[node name="Arrow" type="Node2D" parent="."]
+
+[node name="Arrow" type="Polygon2D" parent="Arrow"]
+polygon = PackedVector2Array(-1, -1, 8, -1, 6, -3, 6, -4, 9.5, -0.5, 9.5, 0.5, 6, 4, 6, 3, 8, 1, -1, 1)
