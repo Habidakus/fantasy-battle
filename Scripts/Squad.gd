@@ -22,9 +22,6 @@ var _speed : float = 30
 var _units_healthy : int
 var _units_wounded : int
 var _default_die_sides : int = 6
-#var initial_size : float
-#var shape : ColorRect
-#var icons : Node2D
 var _formation : Formation = Formation.DOUBLELINE
 var _squad_type : SquadType = SquadType.INFANTRY
 var _jcounter : JCounter = JCounter.Create("Squad")
@@ -56,6 +53,12 @@ func Clone() -> Squad:
 	ret_val.rotation = rotation
 	ret_val.id = id
 	return ret_val
+
+func GetChargeTime() -> float:
+	return 3
+	
+func GetMoveTime() -> float:
+	return 3 if _squad_type != SquadType.CAVALRY else 5
 
 func GetArmy() -> Army:
 	return _army
@@ -372,20 +375,9 @@ func GetNextMove() -> float:
 	return _next_move
 
 func _ready() -> void:
-	#shape = find_child("ColorRect") as ColorRect
-	#icons = find_child("Icons") as Node2D
-	#initial_size = shape.size.x
 	pass
 
 func _process(_delta: float) -> void:
-	#if shape != null:
-		#shape.size = GetDim()
-		#shape.position = -shape.size / 2.0
-		#if icons != null:
-			#var icons_pos : float = min(-shape.position.x, -shape.position.y)
-			#icons.position = Vector2(-icons_pos, -icons_pos)
-			#var icons_scale : float = 2 * icons_pos / initial_size
-			#icons.scale = Vector2(icons_scale, icons_scale)
 	pass
 
 static func GetUnitDim(st : SquadType) -> Vector2:
@@ -481,22 +473,13 @@ func GetDim() -> Vector2:
 
 func SetSquadType(st : SquadType) -> void:
 	_squad_type = st
-	#var cavalryIcon = find_child("Cavalry") as Line2D
-	#var artilleryIcon = find_child("Artillery") as Line2D
-	#var infantryIcon = find_child("Infantry") as Line2D
-	#match _squad_type:
-	#	SquadType.CAVALRY:
-	#		cavalryIcon.show()
-	#		infantryIcon.hide()
-	#		artilleryIcon.hide()
-	#	SquadType.INFANTRY:
-	#		cavalryIcon.show()
-	#		infantryIcon.show()
-	#		artilleryIcon.hide()
-	#	SquadType.ARTILLERY:
-	#		cavalryIcon.hide()
-	#		infantryIcon.hide()
-	#		artilleryIcon.show()
+	match _squad_type:
+		SquadType.CAVALRY:
+			_speed *= 2
+		SquadType.INFANTRY:
+			pass
+		SquadType.ARTILLERY:
+			pass
 			
 func SetFormation(form : Formation) -> void:
 	_formation = form
