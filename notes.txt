@@ -1,1 +1,6 @@
 https://balagan.info/battalion-line-column-and-square-tactical-formations-during-the-napoleonic-wars
+
+- leave corpses on map when units die
+- implement flanking
+- align squads to their targets sides after a charge
+- hide squads once they are dead
