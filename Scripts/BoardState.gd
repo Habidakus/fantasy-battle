@@ -3,6 +3,7 @@ class_name BoardState extends RefCounted
 var _armies : Array[Army]
 var _turn_order : Array[Squad]
 var _jcounter : JCounter = JCounter.Create("BoardState")
+var _in_combat : Array[int] = []
 
 func Clone() -> BoardState:
 	var ret_val : BoardState = BoardState.new()
@@ -10,14 +11,47 @@ func Clone() -> BoardState:
 		ret_val._armies.append(army.Clone())
 		for squad : Squad in army._squads:
 			ret_val._turn_order.append(squad.Clone())
+	for entry in _in_combat:
+		ret_val._in_combat.append(entry)
 	return ret_val
 
-func Config(armies : Array[Army]) -> void:
+func Config(armies : Array[Army], in_combat : Array[int]) -> void:
 	_armies = armies
 	for army : Army in _armies:
 		assert(!army._squads.is_empty())
 		for squad : Squad in army._squads:
 			_turn_order.append(squad)
+	for entry : int in in_combat:
+		_in_combat.append(entry)
+
+func MarkInCombat(left_id : int, right_id : int) -> void:
+	var left_index : int = left_id * 100 + right_id
+	var right_index : int = right_id * 100 + left_id
+	if not _in_combat.has(left_index):
+		assert(!_in_combat.has(right_index))
+		_in_combat.append(left_index)
+		_in_combat.append(right_index)
+	else:
+		assert(_in_combat.has(right_index))
+
+func RemoveCombatPairs(id : int) -> void:
+	var new_list : Array[int]
+	for entry : int in _in_combat:
+		var low : int = entry % 100
+		if (low != id) and (entry - low != id * 100):
+			new_list.append(entry)
+	assert(new_list.size() % 2 == 0)
+	_in_combat = new_list
+
+func IsInCombat(id : int) -> bool:
+	for entry : int in _in_combat:
+		var low : int = entry % 100
+		if (low == id) or (entry - low == id * 100):
+			return true
+	return false
+
+func LockedInCombat(left : int, right : int) -> bool:
+	return _in_combat.has(left * 100 + right)
 
 func GetAllEnemy(army : Army) -> Array[Squad]:
 	for a : Army in _armies:
@@ -27,7 +61,7 @@ func GetAllEnemy(army : Army) -> Array[Squad]:
 	return []
 
 func GenerateGameState(squad : Squad) -> GameState:
-	return GameState.Create(squad, _armies)
+	return GameState.Create(squad, _armies, _in_combat)
 
 func GetOpposingController(controller : ArmyController) -> ArmyController:
 	assert(_armies.size() == 2)
@@ -83,7 +117,7 @@ func MoveTowardsTarget(id : int, target_id : int) -> void:
 	
 	var facing_edge : Array[Vector2] = target.GetFacingEdge(squad.position)
 	if facing_edge.is_empty():
-		print("Are %s and %s overlapping?" % [squad, target])
+		print("TODO: Are %s and %s overlapping?" % [squad, target])
 		squad.position = squad.position + move_vec
 		return
 		
@@ -127,6 +161,7 @@ func RemoveSquadIfDead(id : int) -> bool:
 			if squad.id == id:
 				if squad.IsDead():
 					army._squads.erase(squad)
+					RemoveCombatPairs(id)
 					return true
 				else:
 					return false

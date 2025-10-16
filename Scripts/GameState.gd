@@ -7,10 +7,10 @@ var _current_controller : ArmyController
 var _rnd : RandomNumberGenerator = RandomNumberGenerator.new() # We should implement something deterministic for negamax to use
 var _jcounter : JCounter = JCounter.Create("GameState")
 
-static func Create(squad : Squad, armies : Array[Army]) -> GameState:
+static func Create(squad : Squad, armies : Array[Army], in_combat : Array[int]) -> GameState:
 	var ret_val : GameState = GameState.new()
 	ret_val._squad = squad
-	ret_val._board_state.Config(armies)
+	ret_val._board_state.Config(armies, in_combat)
 	ret_val._invoking_controller = squad.GetArmy().GetController()
 	ret_val._current_controller = ret_val._invoking_controller
 	assert(ret_val._invoking_controller is AIArmyController)
@@ -63,9 +63,10 @@ func apply_action(action : MMCAction) -> MMCGameState:
 	return ret_val
 
 func IsInCombat(squad : Squad) -> bool:
-	assert(!squad.IsDead())
-	# TODO: We should track this
-	return false
+	return _board_state.IsInCombat(squad.id)
+
+func LockedInCombat(left : int, right : int) -> bool:
+	return _board_state.LockedInCombat(left, right)
 
 func GetAllEnemy(army : Army) -> Array[Squad]:
 	return _board_state.GetAllEnemy(army)

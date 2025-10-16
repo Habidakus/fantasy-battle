@@ -49,7 +49,7 @@ func enter_state() -> void:
 			vs.Config(s._squad_type, army.GetPrimaryColor(), army.GetSecondaryColor())
 			#print("%d: %s %s" % [ s.id, army.GetPrimaryColor(), army.GetSecondaryColor()])
 			UpdateSquad(s)
-	_turn_engine.Config(_armies, self)
+	_turn_engine.Config(_armies, self, [])
 
 func UpdateSquad(squad : Squad) -> void:
 	if not _visible_squads.has(squad.id):

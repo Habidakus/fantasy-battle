@@ -117,7 +117,10 @@ func GetRoll(rnd : RandomNumberGenerator, mods : int, disadvantage : bool) -> in
 func GetSortedMoves(game_state : GameState) -> Array[MMCAction]:
 	var ret_val : Array[MMCAction]
 	if game_state.IsInCombat(self):
-		ret_val.append(ArmyControllerAction.CreateMelee(self))
+		for enemy : Squad in game_state.GetAllEnemy(self.GetArmy()):
+			if game_state.LockedInCombat(self.id, enemy.id):
+				ret_val.append(ArmyControllerAction.CreateMelee(self, enemy))
+		assert(not ret_val.is_empty())
 	else:
 		for enemy : Squad in game_state.GetAllEnemy(self.GetArmy()):
 			if CanCharge(enemy):
