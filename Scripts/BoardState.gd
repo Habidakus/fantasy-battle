@@ -71,10 +71,28 @@ func DelaySquad(id : int, time : float) -> void:
 func MoveTowardsTarget(id : int, target_id : int) -> void:
 	var squad : Squad = GetSquadById(id)
 	var target : Squad = GetSquadById(target_id)
-	squad.rotation = (target.position - squad.position).angle()
+	var vec_to_target : Vector2 = target.position - squad.position
+	
+	squad.rotation = vec_to_target.angle()
 	var forward_dir : Vector2 = Vector2(1,0).rotated(squad.rotation)
-	var move_vec : Vector2 = squad._speed * forward_dir
-	squad.position += move_vec
+	var dist_to_target : float = vec_to_target.length()
+	var thrust : float = squad._speed if dist_to_target > squad._speed else dist_to_target
+	var move_vec : Vector2 = thrust * forward_dir
+	var distance_to_our_front : float = squad.GetDim().y / 2.0
+	var projection_vec : Vector2 = distance_to_our_front * forward_dir
+	
+	var facing_edge : Array[Vector2] = target.GetFacingEdge(squad.position)
+	if facing_edge.is_empty():
+		print("Are %s and %s overlapping?" % [squad, target])
+		squad.position = squad.position + move_vec
+		return
+		
+	#var final_pos : Vector2 = squad.position + move_vec
+	var hit_point = Geometry2D.segment_intersects_segment(squad.position, squad.position + move_vec + projection_vec, facing_edge[0], facing_edge[1])
+	if hit_point == null:
+		squad.position = squad.position + move_vec
+	else:
+		squad.position = hit_point - projection_vec
 
 func MoveToLocation(id : int, location : Vector2, rot : float) -> void:
 	var squad : Squad = GetSquadById(id)
@@ -125,7 +143,6 @@ func CurrentSquad() -> Squad:
 	return ret_val
 
 func OrderSquads() -> void:
-	
 	_turn_order.clear()
 	for army : Army in _armies:
 		for squad : Squad in army._squads:

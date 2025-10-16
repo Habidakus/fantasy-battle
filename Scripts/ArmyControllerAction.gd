@@ -48,14 +48,12 @@ func ApplyToBoardState(board_state : BoardState, rnd : RandomNumberGenerator) ->
 func _apply_pass(board_state : BoardState) -> void:
 	if _squad != null:
 		board_state.DelaySquad(_squad.id, 2)
-	#game_state.AssignNextSquadToGo()
 
 func _apply_melee(board_state : BoardState, rnd : RandomNumberGenerator) -> void:
 	board_state.InflictDamage(_squad.id, _target.id, Squad.DamageType.MELEE, rnd)
 	board_state.RemoveSquadIfDead(_target.id)
 	if not board_state.RemoveSquadIfDead(_squad.id):
 		board_state.DelaySquad(_squad.id, 3)
-	#game_state.AssignNextSquadToGo()
 
 func _apply_charge(board_state : BoardState, rnd : RandomNumberGenerator) -> void:
 	board_state.MoveTowardsTarget(_squad.id, _target.id)
@@ -63,7 +61,6 @@ func _apply_charge(board_state : BoardState, rnd : RandomNumberGenerator) -> voi
 	board_state.RemoveSquadIfDead(_target.id)
 	if not board_state.RemoveSquadIfDead(_squad.id):
 		board_state.DelaySquad(_squad.id, _squad.GetChargeTime())
-	#game_state.AssignNextSquadToGo()
 
 func _apply_move(board_state : BoardState) -> void:
 	if _target != null:
@@ -71,7 +68,6 @@ func _apply_move(board_state : BoardState) -> void:
 	else:
 		board_state.MoveAtAngle(_squad.id, _position, _rotation)
 	board_state.DelaySquad(_squad.id, _squad.GetMoveTime())
-	#game_state.AssignNextSquadToGo()
 
 static func _create(squad : Squad, action : Action) -> ArmyControllerAction:
 	var ret_val :ArmyControllerAction = ArmyControllerAction.new()

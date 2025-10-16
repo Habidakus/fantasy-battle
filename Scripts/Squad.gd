@@ -69,13 +69,30 @@ func GetUnits() -> int:
 func IsDead() -> bool:
 	return _units_healthy + _units_wounded <= 0
 
+func GetFacingEdge(loc : Vector2) -> Array[Vector2]:
+	var dims : Vector2 = GetDim() / 2.0
+	var points : Array[Vector2] = [ dims, Vector2(-dims.x, dims.y), Vector2(-dims.x, -dims.y), Vector2(dims.x, -dims.y) ]
+	for i in range(points.size()):
+		points[i] = position + points[i].rotated(rotation)
+	for i in range(points.size()):
+		var hit_point = Geometry2D.segment_intersects_segment(position, loc, points[i], points[(i + 1) % 4])
+		if hit_point != null:
+			return [points[i], points[(i + 1) % 4]]
+	return []
+	
 func GetChargeDistance() -> float:
 	# TODO: Charge distance should change by formation & squad type
 	return _speed
 
 func CanCharge(enemy : Squad) -> bool:
 	# TODO: Add cost to turn towards closest spot on enemy
-	return enemy.position.distance_to(position) < GetChargeDistance()
+	var distance_to_our_front : float = GetDim().y / 2.0
+	var facing_edge : Array[Vector2] = enemy.GetFacingEdge(position)
+	if facing_edge.is_empty():
+		return false
+	var hit_point = Geometry2D.segment_intersects_segment(position, enemy.position, facing_edge[0], facing_edge[1])
+	assert(hit_point != null)
+	return hit_point.distance_to(position) < GetChargeDistance() + distance_to_our_front
 
 func InflictWound(rnd : RandomNumberGenerator) -> void:
 	if IsDead():
@@ -98,7 +115,6 @@ func GetRoll(rnd : RandomNumberGenerator, mods : int, disadvantage : bool) -> in
 	return roll
 
 func GetSortedMoves(game_state : GameState) -> Array[MMCAction]:
-	# ArmyControllerAction
 	var ret_val : Array[MMCAction]
 	if game_state.IsInCombat(self):
 		ret_val.append(ArmyControllerAction.CreateMelee(self))
