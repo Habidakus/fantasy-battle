@@ -56,9 +56,8 @@ func _process(delta: float) -> void:
 	
 func enter_state() -> void:
 	super.enter_state()
-	print("Need to process order: %s" % [our_state_machine._pending_action])
 	_pending_board_state = our_state_machine._board_state.Clone()
-	our_state_machine._pending_action.ApplyToBoardState(_pending_board_state, _rnd)
+	our_state_machine._pending_action.ApplyToBoardState(_pending_board_state, _rnd, true)
 
 func exit_state(_next_state: StateMachineState) -> void:
 	our_state_machine._board_state = _pending_board_state

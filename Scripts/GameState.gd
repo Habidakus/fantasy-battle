@@ -58,7 +58,7 @@ func _get_opposing_controller(controller : AIArmyController) -> ArmyController:
 func apply_action(action : MMCAction) -> MMCGameState:
 	var ret_val : GameState = CreateClone()
 	var aca : ArmyControllerAction = action as ArmyControllerAction
-	aca.ApplyToBoardState(ret_val._board_state, ret_val._rnd)
+	aca.ApplyToBoardState(ret_val._board_state, ret_val._rnd, false)
 	ret_val.AssignNextSquadToGo()
 	return ret_val
 

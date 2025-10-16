@@ -2,6 +2,7 @@ class_name Squad extends RefCounted
 
 static var s_NEXT_ID : int = 0
 
+enum FlankType { Front, Side, Back}
 enum DamageType { MELEE, CHARGE, MISSLE, ARTILLERY }
 enum SquadType { INFANTRY, CAVALRY, ARTILLERY }
 enum Formation { LINE, DOUBLELINE, TRIPLELINE, SQUARE, SKIRMISH, COLUMN }
@@ -18,7 +19,7 @@ var rotation : float
 var _turn_order_tie_breaker : float
 var _next_move : float
 var _army : Army
-var _speed : float = 30
+var _speed : float = 60
 var _units_healthy : int
 var _units_wounded : int
 var _default_die_sides : int = 6
@@ -54,8 +55,11 @@ func Clone() -> Squad:
 	ret_val.id = id
 	return ret_val
 
-func GetChargeTime() -> float:
+func GetMeleeTime() -> float:
 	return 3
+
+func GetChargeTime() -> float:
+	return 3 if _squad_type != SquadType.CAVALRY else 5
 	
 func GetMoveTime() -> float:
 	return 3 if _squad_type != SquadType.CAVALRY else 5
@@ -68,6 +72,21 @@ func GetUnits() -> int:
 
 func IsDead() -> bool:
 	return _units_healthy + _units_wounded <= 0
+
+func GetPresentingFlank(attack_loc : Vector2) -> FlankType:
+	var dims : Vector2 = GetDim() / 2.0
+	var points : Array[Vector2] = [ dims, Vector2(-dims.x, dims.y), Vector2(-dims.x, -dims.y), Vector2(dims.x, -dims.y) ]
+	for i in range(points.size()):
+		points[i] = position + points[i].rotated(rotation)
+		if i > 0:
+			var hit_point = Geometry2D.segment_intersects_segment(position, attack_loc, points[i], points[(i + 3) % 4])
+			if hit_point != null:
+				match i:
+					1: return FlankType.Side
+					2: return FlankType.Back
+					3: return FlankType.Side
+	assert(null != Geometry2D.segment_intersects_segment(position, attack_loc, points[0], points[3]))
+	return FlankType.Front
 
 func GetFacingEdge(loc : Vector2) -> Array[Vector2]:
 	var dims : Vector2 = GetDim() / 2.0
@@ -157,12 +176,12 @@ func GetClosenessScore(our_score : float, enemy_score : float, dist_squared : fl
 	var turns_away : int = max(1, int(ceil(sqrt(dist_squared) / _speed)))
 	return (our_score + enemy_score + diff_score) / (turns_away * turns_away)
 
-static func CalculateDieMods(attacker : Formation, defender : Formation, damageType : DamageType) -> Vector2i:
+static func CalculateDieMods(attacker : Formation, defender : Formation, damageType : DamageType, flank : Squad.FlankType) -> Vector2i:
 	match damageType:
 		DamageType.MELEE:
-			return Vector2i(CalculateDieMods_AttackerIsMelee(attacker), CalculateDieMods_DefenderAgainstMelee(defender))
+			return Vector2i(CalculateDieMods_AttackerIsMelee(attacker), CalculateDieMods_DefenderAgainstMelee(defender, flank))
 		DamageType.CHARGE:
-			return Vector2i(CalculateDieMods_AttackerIsCharge(attacker), CalculateDieMods_DefenderAgainstCharge(defender))
+			return Vector2i(CalculateDieMods_AttackerIsCharge(attacker), CalculateDieMods_DefenderAgainstCharge(defender, flank))
 		DamageType.MISSLE:
 			return Vector2i(CalculateDieMods_AttackerIsMissile(attacker), CalculateDieMods_DefenderAgainstMissile(defender))
 		DamageType.ARTILLERY:
@@ -171,8 +190,18 @@ static func CalculateDieMods(attacker : Formation, defender : Formation, damageT
 			assert(false, "Unknown Damage Type: " + str(damageType))
 			return Vector2i(0, 0)
 
-func GetDieCountInDefense() -> int:
-	# TODO: Later on we need to consider flanking, and if more than one side being attacked
+func GetDieCountInDefense(flank : Squad.FlankType) -> int:
+	if _formation == Formation.SKIRMISH || _formation == Formation.SQUARE:
+		return GetWidthAndRanks().x
+	match flank:
+		Squad.FlankType.Front:
+			return GetWidthAndRanks().x
+		Squad.FlankType.Side:
+			return GetWidthAndRanks().y
+		Squad.FlankType.Back:
+			var rear_row : int = GetUnits() % GetWidthAndRanks().x
+			return rear_row
+	assert(false, "GetDieCountInDefense(): unknown flank : %s" % Squad.FlankType.keys()[flank])
 	return GetWidthAndRanks().x
 
 func GetDieCountInAttack(damageType : DamageType) -> int:
@@ -325,23 +354,26 @@ static func CalculateDieMods_AttackerIsCharge(attacker : Formation) -> int:
 		_:
 			assert(false)
 			return 0
-static func CalculateDieMods_DefenderAgainstCharge(defender : Formation) -> int:
+
+static func CalculateDieMods_DefenderAgainstCharge(defender : Formation, flank : Squad.FlankType) -> int:
+	var flank_mod : int = _calculate_flank_defense_mod(flank)
 	match defender:
 		Formation.LINE:
-			return -1
+			return flank_mod - 1
 		Formation.DOUBLELINE:
-			return 0
+			return flank_mod
 		Formation.TRIPLELINE:
-			return 1
+			return flank_mod + 1
 		Formation.SQUARE:
 			return 1
 		Formation.SKIRMISH:
 			return -2
 		Formation.COLUMN:
-			return 1
+			return flank_mod + 1
 		_:
 			assert(false)
-			return 0
+			return flank_mod
+
 static func CalculateDieMods_AttackerIsMelee(attacker : Formation) -> int:
 	match attacker:
 		Formation.LINE:
@@ -359,25 +391,37 @@ static func CalculateDieMods_AttackerIsMelee(attacker : Formation) -> int:
 		_:
 			assert(false)
 			return 0
-static func CalculateDieMods_DefenderAgainstMelee(defender : Formation) -> int:
+
+static func CalculateDieMods_DefenderAgainstMelee(defender : Formation, flank : Squad.FlankType) -> int:
+	var flank_mod : int = _calculate_flank_defense_mod(flank)
 	match defender:
 		Formation.LINE:
-			return -1
+			return flank_mod - 1
 		Formation.DOUBLELINE:
-			return 0
+			return flank_mod
 		Formation.TRIPLELINE:
-			return 0
+			return flank_mod
 		Formation.SQUARE:
-			return 0
+			return 0 
 		Formation.SKIRMISH:
 			return -1
 		Formation.COLUMN:
-			return 0
+			return flank_mod 
 		_:
 			assert(false)
-			return 0
+			return flank_mod 
 
-# s.Initialize(army, 15, Squad.SquadType.INFANTRY, Squad.Formation.DOUBLELINE)
+static func _calculate_flank_defense_mod(flank : Squad.FlankType) -> int:
+	match flank:
+		Squad.FlankType.Front:
+			return 0
+		Squad.FlankType.Side:
+			return -1
+		Squad.FlankType.Back:
+			return -2
+	assert(false, "_calculate_flank_defense_mod() unknown flank type: %s" % [Squad.FlankType.keys()[flank]])
+	return 0
+
 func Initialize(army : Army, count : int, st : SquadType, form : Formation, rnd : RandomNumberGenerator) -> void:
 	_army = army
 	SetSquadType(st)

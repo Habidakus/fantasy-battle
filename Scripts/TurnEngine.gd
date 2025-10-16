@@ -27,6 +27,10 @@ func GenerateGameState(squad : Squad) -> GameState:
 
 func _OnStateEnter_DetermineWhoGoesNext() -> void:
 	_board_state.OrderSquads()
+	var debug_order_string : String = "Turn order:"
+	for s : Squad in _board_state._turn_order:
+		debug_order_string += " %s" % [s]
+	print(debug_order_string)
 	var current_squad : Squad = _board_state.CurrentSquad()
 	var controller : ArmyController = current_squad.GetArmy().GetController()
 	controller.RequestOrders(current_squad)

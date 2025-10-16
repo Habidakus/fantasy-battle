@@ -133,23 +133,32 @@ func MoveToLocation(id : int, location : Vector2, rot : float) -> void:
 	squad.position = location
 	squad.rotation = rot
 
-func InflictDamage(attacker_id : int, target_id : int, damage_type : Squad.DamageType, rnd : RandomNumberGenerator) -> void:
+func InflictDamage(print: bool, attacker_id : int, target_id : int, damage_type : Squad.DamageType, rnd : RandomNumberGenerator) -> void:
 	var attacker : Squad = GetSquadById(attacker_id)
 	var defender : Squad = GetSquadById(target_id)
-	var die_mods : Vector2i = Squad.CalculateDieMods(attacker._formation, defender._formation, damage_type)
+	var flank : Squad.FlankType = defender.GetPresentingFlank(attacker.position)
+	var die_mods : Vector2i = Squad.CalculateDieMods(attacker._formation, defender._formation, damage_type, flank)
 	var attacker_dice : int = attacker.GetDieCountInAttack(damage_type)
-	var defender_dice : int = defender.GetDieCountInDefense()
+	var defender_dice : int = defender.GetDieCountInDefense(flank)
 	var die_rolls : int = max(attacker_dice, defender_dice)
 	var attacker_wounds : int = 0
 	var defender_wounds : int = 0
+	var dice_text : String = "%s %s:" % [attacker_dice, defender_dice]
 	for i in range(die_rolls):
 		var attacker_roll : int = attacker.GetRoll(rnd, die_mods[0], i >= attacker_dice)
 		var defender_roll : int = defender.GetRoll(rnd, die_mods[1], i >= defender_dice)
 		if attacker_roll > defender_roll:
+			dice_text += " %s>%s" % [attacker_roll, defender_roll]
 			defender_wounds += 1
 		elif defender_roll > attacker_roll:
+			dice_text += " %s<%s" % [attacker_roll, defender_roll]
 			if damage_type == Squad.DamageType.MELEE || damage_type == Squad.DamageType.CHARGE:
 				attacker_wounds += 1
+		else:
+			dice_text += " %s=%s" % [attacker_roll, defender_roll]
+	if print:
+		var damage : String = "wounds(%s/%s)" % [attacker_wounds, defender_wounds]
+		print("%s %ss %s in the %s: [%s ] %s" % [attacker, Squad.DamageType.keys()[damage_type], defender, Squad.FlankType.keys()[flank], dice_text, damage])
 	for i in range(attacker_wounds):
 		attacker.InflictWound(rnd)
 	for i in range(defender_wounds):
