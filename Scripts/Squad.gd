@@ -73,6 +73,35 @@ func GetUnits() -> int:
 func IsDead() -> bool:
 	return _units_healthy + _units_wounded <= 0
 
+func MakeFlushAgainst(edge : Array[Vector2], pointOnLine : Vector2) -> void:
+		var edgeDir : Vector2 = (edge[0] - edge[1])
+		var facingDir : Vector2 = Vector2(-edgeDir.y, edgeDir.x).normalized()
+		
+		var ourCurrentDirection : Vector2 = Vector2.from_angle(rotation)
+		assert(ourCurrentDirection.is_normalized())
+		
+		# If the edge that was given to us is backwards, flip the facing dir
+		var dot : float = ourCurrentDirection.dot(facingDir)
+		if dot < 0:
+			facingDir = Vector2.ZERO - facingDir
+		
+		var distance_to_our_front : float = GetDim().y / 2.0
+		rotation = facingDir.angle()
+		position = pointOnLine - (distance_to_our_front * facingDir )
+		#squad.position = hit_point - projection_vec
+
+func GetInterestingPointsNearMe(distance : float) -> Array[Vector2]:
+	var dims : Vector2 = GetDim() / 2.0
+	var points : Array[Vector2] = [ dims, Vector2(-dims.x, dims.y), Vector2(-dims.x, -dims.y), Vector2(dims.x, -dims.y) ]
+	for i in range(points.size()):
+		points[i] = position + points[i].rotated(rotation)
+	var ret_val : Array[Vector2]
+	for i in range(points.size()):
+		var mid_edge : Vector2 = (points[i] + points[(i + 1) % 4]) / 2.0
+		var dir : Vector2 = (mid_edge - position).normalized()
+		ret_val.append(dir * distance + mid_edge)
+	return ret_val
+
 func GetPresentingFlank(attack_loc : Vector2) -> FlankType:
 	var dims : Vector2 = GetDim() / 2.0
 	var points : Array[Vector2] = [ dims, Vector2(-dims.x, dims.y), Vector2(-dims.x, -dims.y), Vector2(dims.x, -dims.y) ]
@@ -101,6 +130,9 @@ func GetFacingEdge(loc : Vector2) -> Array[Vector2]:
 	
 func GetChargeDistance() -> float:
 	# TODO: Charge distance should change by formation & squad type
+	return _speed
+
+func GetMoveDistance() -> float:
 	return _speed
 
 func CanCharge(enemy : Squad) -> bool:
@@ -145,7 +177,8 @@ func GetSortedMoves(game_state : GameState) -> Array[MMCAction]:
 			if CanCharge(enemy):
 				ret_val.append(ArmyControllerAction.CreateCharge(self, enemy))
 			else:
-				ret_val.append(ArmyControllerAction.CreateMove(self, enemy))
+				for point : Vector2 in enemy.GetInterestingPointsNearMe(self.GetMoveDistance() * 0.95):
+					ret_val.append(ArmyControllerAction.CreateMoveTowards(self, point))
 		ret_val.append(ArmyControllerAction.CreatePass(self))
 	return ret_val
 

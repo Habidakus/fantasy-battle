@@ -6,7 +6,7 @@ var _squad : Squad
 var _action : Action
 var _target : Squad
 var _position : Vector2
-var _rotation : float
+#var _rotation : float
 var _jcounter : JCounter = JCounter.Create("ArmyControllerAction")
 
 func _to_string() -> String:
@@ -32,30 +32,30 @@ func _to_string() -> String:
 		_:
 			return "%s will perform unknown action: %s" % [squad_name, Action.keys()[_action]]
 
-func ApplyToBoardState(board_state : BoardState, rnd : RandomNumberGenerator, print : bool) -> void:
+func ApplyToBoardState(board_state : BoardState, rnd : RandomNumberGenerator, prnt : bool) -> void:
 	match _action:
 		Action.PASS:
-			_apply_pass(print, board_state)
+			_apply_pass(prnt, board_state)
 		Action.MELEE:
-			_apply_melee(print, board_state, rnd)
+			_apply_melee(prnt, board_state, rnd)
 		Action.CHARGE:
-			_apply_charge(print, board_state, rnd)
+			_apply_charge(prnt, board_state, rnd)
 		Action.MOVE:
-			_apply_move(print, board_state)
+			_apply_move(prnt, board_state)
 		_:
 			assert(false, "Unknown action type: " + Action.keys()[_action])
 
-func _apply_pass(print: bool, board_state : BoardState) -> void:
+func _apply_pass(prnt: bool, board_state : BoardState) -> void:
 	if _squad != null:
-		if print:
+		if prnt:
 			print("%s passes" % [_squad])
 		board_state.DelaySquad(_squad.id, 2)
 	else:
-		if print:
+		if prnt:
 			print("Player passes")
 
-func _apply_melee(print: bool, board_state : BoardState, rnd : RandomNumberGenerator) -> void:
-	board_state.InflictDamage(print, _squad.id, _target.id, Squad.DamageType.MELEE, rnd)
+func _apply_melee(prnt: bool, board_state : BoardState, rnd : RandomNumberGenerator) -> void:
+	board_state.InflictDamage(prnt, _squad.id, _target.id, Squad.DamageType.MELEE, rnd)
 	var both_alive : bool = true
 	if board_state.RemoveSquadIfDead(_target.id):
 		both_alive = false
@@ -66,9 +66,9 @@ func _apply_melee(print: bool, board_state : BoardState, rnd : RandomNumberGener
 	if both_alive:
 		board_state.MarkInCombat(_squad.id, _target.id)
 
-func _apply_charge(print: bool, board_state : BoardState, rnd : RandomNumberGenerator) -> void:
+func _apply_charge(prnt: bool, board_state : BoardState, rnd : RandomNumberGenerator) -> void:
 	board_state.MoveTowardsTarget(_squad.id, _target.id)
-	board_state.InflictDamage(print, _squad.id, _target.id, Squad.DamageType.CHARGE, rnd)
+	board_state.InflictDamage(prnt, _squad.id, _target.id, Squad.DamageType.CHARGE, rnd)
 	var both_alive : bool = true
 	if board_state.RemoveSquadIfDead(_target.id):
 		both_alive = false
@@ -79,13 +79,13 @@ func _apply_charge(print: bool, board_state : BoardState, rnd : RandomNumberGene
 	if both_alive:
 		board_state.MarkInCombat(_squad.id, _target.id)
 
-func _apply_move(print: bool, board_state : BoardState) -> void:
-	if print:
+func _apply_move(prnt: bool, board_state : BoardState) -> void:
+	if prnt:
 		print("%s advances" % [_squad])
 	if _target != null:
 		board_state.MoveTowardsTarget(_squad.id, _target.id)
 	else:
-		board_state.MoveAtAngle(_squad.id, _position, _rotation)
+		board_state.MoveTowardsLocation(_squad.id, _position)
 	board_state.DelaySquad(_squad.id, _squad.GetMoveTime())
 
 static func _create(squad : Squad, action : Action) -> ArmyControllerAction:
@@ -106,10 +106,16 @@ static func CreateMelee(squad : Squad, target : Squad) -> ArmyControllerAction:
 static func CreatePass(squad : Squad) -> ArmyControllerAction:
 	return ArmyControllerAction._create(squad, Action.PASS)
 
-static func CreateMove(squad : Squad, target : Squad) -> ArmyControllerAction:
+static func CreateMoveAt(squad : Squad, target : Squad) -> ArmyControllerAction:
 	assert(squad.GetArmy() != target.GetArmy())
 	var ret_val : ArmyControllerAction = ArmyControllerAction._create(squad, Action.MOVE)
 	ret_val._target = target
+	return ret_val
+
+static func CreateMoveTowards(squad : Squad, loc : Vector2) -> ArmyControllerAction:
+	var ret_val : ArmyControllerAction = ArmyControllerAction._create(squad, Action.MOVE)
+	ret_val._position = loc
+	#ret_val._rotation = squad.position.angle_to(loc)
 	return ret_val
 
 static func CreateCharge(squad : Squad, target : Squad) -> ArmyControllerAction:

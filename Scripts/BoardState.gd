@@ -110,7 +110,7 @@ func MoveTowardsTarget(id : int, target_id : int) -> void:
 	squad.rotation = vec_to_target.angle()
 	var forward_dir : Vector2 = Vector2(1,0).rotated(squad.rotation)
 	var dist_to_target : float = vec_to_target.length()
-	var thrust : float = squad._speed if dist_to_target > squad._speed else dist_to_target
+	var thrust : float = squad.GetMoveDistance() if dist_to_target > squad.GetMoveDistance() else dist_to_target
 	var move_vec : Vector2 = thrust * forward_dir
 	var distance_to_our_front : float = squad.GetDim().y / 2.0
 	var projection_vec : Vector2 = distance_to_our_front * forward_dir
@@ -126,14 +126,21 @@ func MoveTowardsTarget(id : int, target_id : int) -> void:
 	if hit_point == null:
 		squad.position = squad.position + move_vec
 	else:
-		squad.position = hit_point - projection_vec
+		squad.MakeFlushAgainst(facing_edge, hit_point)
 
-func MoveToLocation(id : int, location : Vector2, rot : float) -> void:
+func MoveTowardsLocation(id : int, location : Vector2) -> void:
 	var squad : Squad = GetSquadById(id)
-	squad.position = location
-	squad.rotation = rot
+	#assert(Vector2(1,0).rotated(rot) == Vector2.from_angle(rot))
+	#squad.rotation = rot
+	var move_vector : Vector2 = location - squad.position
+	squad.rotation = move_vector.angle()
+	var speed : float = squad.GetMoveDistance()
+	if move_vector.length() <= speed:
+		squad.position = location
+	else:
+		squad.position += speed * move_vector.normalized()
 
-func InflictDamage(print: bool, attacker_id : int, target_id : int, damage_type : Squad.DamageType, rnd : RandomNumberGenerator) -> void:
+func InflictDamage(prnt: bool, attacker_id : int, target_id : int, damage_type : Squad.DamageType, rnd : RandomNumberGenerator) -> void:
 	var attacker : Squad = GetSquadById(attacker_id)
 	var defender : Squad = GetSquadById(target_id)
 	var flank : Squad.FlankType = defender.GetPresentingFlank(attacker.position)
@@ -156,7 +163,7 @@ func InflictDamage(print: bool, attacker_id : int, target_id : int, damage_type 
 				attacker_wounds += 1
 		else:
 			dice_text += " %s=%s" % [attacker_roll, defender_roll]
-	if print:
+	if prnt:
 		var damage : String = "wounds(%s/%s)" % [attacker_wounds, defender_wounds]
 		print("%s %ss %s in the %s: [%s ] %s" % [attacker, Squad.DamageType.keys()[damage_type], defender, Squad.FlankType.keys()[flank], dice_text, damage])
 	for i in range(attacker_wounds):
