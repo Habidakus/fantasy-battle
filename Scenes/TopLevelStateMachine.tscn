@@ -1,4 +1,4 @@
-[gd_scene load_steps=10 format=3 uid="uid://otau0j5e6xpf"]
+[gd_scene load_steps=21 format=3 uid="uid://otau0j5e6xpf"]
 
 [ext_resource type="Script" uid="uid://da4jmxbeqpsyh" path="res://addons/statemachine/StateMachine.gd" id="1_eb3ea"]
 [ext_resource type="Script" uid="uid://cmo4rd026j7ny" path="res://addons/statemachine/StateMachineState_AnyKeyToContinue.gd" id="2_p0bqw"]
@@ -6,8 +6,19 @@
 [ext_resource type="Script" uid="uid://cfwv1w01lwr2y" path="res://addons/statemachine/StateMachineState.gd" id="4_jmcgl"]
 [ext_resource type="Script" uid="uid://b7xmo2qysuhpg" path="res://Scripts/ChangeStateButton.gd" id="5_p0bqw"]
 [ext_resource type="Script" uid="uid://bq0infj5qq8op" path="res://Scripts/StatePlay.gd" id="6_dalco"]
+[ext_resource type="Texture2D" uid="uid://bxuj3qsyx6in0" path="res://Art/blood_01.png" id="7_lclh7"]
 [ext_resource type="Texture2D" uid="uid://dmhop3uuxg8p6" path="res://Art/GroundNoise.tres" id="7_oc3if"]
+[ext_resource type="Texture2D" uid="uid://cc83imjro1hem" path="res://Art/blood_02.png" id="8_j0to7"]
 [ext_resource type="Texture2D" uid="uid://qbf5i1nycolt" path="res://Art/MistNoise.tres" id="8_wuua4"]
+[ext_resource type="Texture2D" uid="uid://csc864mgxga1b" path="res://Art/blood_03.png" id="9_jb22r"]
+[ext_resource type="Texture2D" uid="uid://cj5t3o3qedk85" path="res://Art/blood_04.png" id="10_a0bxi"]
+[ext_resource type="Texture2D" uid="uid://cji0dysmvbgd6" path="res://Art/blood_05.png" id="11_v27vs"]
+[ext_resource type="Texture2D" uid="uid://jh4tg5akif8n" path="res://Art/blood_06.png" id="12_ebbg3"]
+[ext_resource type="Texture2D" uid="uid://t1e1kxlmxo3l" path="res://Art/skull_01.png" id="13_segnc"]
+[ext_resource type="Texture2D" uid="uid://cgpqpwydnhgx7" path="res://Art/skull_02.png" id="14_8acls"]
+[ext_resource type="Texture2D" uid="uid://dme4tgtoyj576" path="res://Art/skull_03.png" id="15_hyb5x"]
+[ext_resource type="Texture2D" uid="uid://bqbsja046albk" path="res://Art/bones_01.png" id="16_etfrk"]
+[ext_resource type="Texture2D" uid="uid://cfqawpkdhoqd2" path="res://Art/bones_02.png" id="17_72ewe"]
 
 [sub_resource type="LabelSettings" id="LabelSettings_oc3if"]
 font = ExtResource("3_dalco")
@@ -211,6 +222,8 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 script = ExtResource("6_dalco")
+wound_textures = Array[Texture2D]([ExtResource("7_lclh7"), ExtResource("8_j0to7"), ExtResource("9_jb22r"), ExtResource("10_a0bxi"), ExtResource("11_v27vs"), ExtResource("12_ebbg3")])
+corpse_textures = Array[Texture2D]([ExtResource("13_segnc"), ExtResource("14_8acls"), ExtResource("15_hyb5x"), ExtResource("16_etfrk"), ExtResource("17_72ewe")])
 metadata/_custom_type_script = "uid://cfwv1w01lwr2y"
 
 [node name="ParallaxBackground" type="ParallaxBackground" parent="State_Play"]
