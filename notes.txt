@@ -2,3 +2,4 @@ https://balagan.info/battalion-line-column-and-square-tactical-formations-during
 
 - add terrain
 - add cost for turning
+- when computing AI move tree, all combat should be resolved in the most default/average outcome possible to calculate
