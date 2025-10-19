@@ -97,6 +97,33 @@ func GetSquadById(id : int) -> Squad:
                 return squad
     assert(false)
     return null
+
+func CheckForCollisions(travelling_squad : Squad, destination : Vector2) -> Vector2:
+    var travel_vector : Vector2 = destination - travelling_squad.position
+    var travel_normal : Vector2 = travel_vector.normalized()
+    var travel_angle : float = travel_vector.angle()
+    var travel_length : float = travel_vector.length()
+    var points : Array[Vector2] = travelling_squad.GetLeadingEdgeAtRotation(travel_angle)
+    var shortened_length : float = travel_length * 2
+    var point_count : int = points.size()
+    var dest_points : Array[Vector2]
+    for point : Vector2 in points:
+        dest_points.append(point + travel_normal * travel_length)
+    for squad : Squad in _turn_order:
+        if squad.id == travelling_squad.id:
+            continue
+        for squad_edge : Array in squad.GetOutline():
+            for point_index in range(point_count):
+                var hit_point = Geometry2D.segment_intersects_segment(points[point_index], dest_points[point_index], squad_edge[0], squad_edge[1])
+                if hit_point != null:
+                    var new_length : float = (hit_point - points[point_index]).length()
+                    if new_length < shortened_length:
+                        shortened_length = new_length
+    if shortened_length > travel_length:
+        return destination
+    else:
+        #print("%s's shortened length = %s" % [travelling_squad, shortened_length])
+        return travelling_squad.position + travel_normal * shortened_length
     
 func DelaySquad(id : int, time : float) -> void:
     var squad : Squad = GetSquadById(id)

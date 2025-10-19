@@ -1,5 +1,4 @@
 https://balagan.info/battalion-line-column-and-square-tactical-formations-during-the-napoleonic-wars
 
-- squads stop when they encounter their charge targets, but they should also not collide with others that happen to be in their way
 - add terrain
 - add cost for turning

@@ -106,6 +106,14 @@ func GetInterestingPointsNearMe(distance : float) -> Array[Vector2]:
         ret_val.append(dir * distance + mid_edge)
     return ret_val
 
+
+func GetLeadingEdgeAtRotation(angle : float) -> Array[Vector2]:
+    var dims : Vector2 = GetDepthAndWidth() / 2.0
+    var pointA : Vector2 = Vector2(dims.y, -dims.x).rotated(angle) + position
+    var pointB : Vector2 = Vector2(dims.y, dims.x).rotated(angle) + position
+    var pointC : Vector2 = (pointA + pointB) / 2.0
+    return [pointA, pointC, pointB]
+
 func GetOutline() -> Array:
     var dims : Vector2 = GetDepthAndWidth() / 2.0
     var points : Array[Vector2]
@@ -200,7 +208,8 @@ func GetSortedMoves(game_state : GameState) -> Array[MMCAction]:
                 ret_val.append(ArmyControllerAction.CreateCharge(self, enemy))
             else:
                 for point : Vector2 in enemy.GetInterestingPointsNearMe(self.GetMoveDistance() * 0.95):
-                    move_spots.append(point)
+                    var shortened_point : Vector2 = game_state.CheckForCollisions(self, point)
+                    move_spots.append(shortened_point)
         if move_spots.size() < 4:
             for point in move_spots:
                 ret_val.append(ArmyControllerAction.CreateMoveTowards(self, point))
