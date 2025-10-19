@@ -11,7 +11,7 @@ func _to_string() -> String:
 
 func RequestOrders(squad : Squad) -> void:
     var game_state : GameState = _turn_engine.GenerateGameState(squad)
-    var action : ArmyControllerAction = _negamax_engine.get_best_action(game_state, 7)
+    var action : ArmyControllerAction = _negamax_engine.get_best_action(game_state, 8)
     if action != null:
         _turn_engine.SubmitAction(action)
 
