@@ -74,8 +74,8 @@ func IsDead() -> bool:
     return _units_healthy + _units_wounded <= 0
 
 func GetWoundLocation(rnd : RandomNumberGenerator) -> Vector2:
-    var dim : Vector2 = GetDim()
-    var loc : Vector2 = Vector2(rnd.randf() * dim.x, rnd.randf() * dim.y) - (dim / 2.0)
+    var depthAndWidth : Vector2 = GetDepthAndWidth()
+    var loc : Vector2 = Vector2(rnd.randf() * depthAndWidth.y, rnd.randf() * depthAndWidth.x) - (Vector2(depthAndWidth.y, depthAndWidth.x) / 2.0)
     return position + loc.rotated(rotation)
 
 func MakeFlushAgainst(edge : Array[Vector2], pointOnLine : Vector2) -> void:
@@ -90,13 +90,13 @@ func MakeFlushAgainst(edge : Array[Vector2], pointOnLine : Vector2) -> void:
     if dot < 0:
         facingDir = Vector2.ZERO - facingDir
     
-    var distance_to_our_front : float = GetDim().y / 2.0
+    var distance_to_our_front : float = GetDepthAndWidth().y / 2.0
     rotation = facingDir.angle()
     position = pointOnLine - (distance_to_our_front * facingDir )
 
 func GetInterestingPointsNearMe(distance : float) -> Array[Vector2]:
-    var dims : Vector2 = GetDim() / 2.0
-    var points : Array[Vector2] = [ dims, Vector2(-dims.x, dims.y), Vector2(-dims.x, -dims.y), Vector2(dims.x, -dims.y) ]
+    var dims : Vector2 = GetDepthAndWidth() / 2.0
+    var points : Array[Vector2] = [ Vector2(dims.y, dims.x), Vector2(-dims.y, dims.x), Vector2(-dims.y, -dims.x), Vector2(dims.y, -dims.x) ]
     for i in range(points.size()):
         points[i] = position + points[i].rotated(rotation)
     var ret_val : Array[Vector2]
@@ -106,24 +106,41 @@ func GetInterestingPointsNearMe(distance : float) -> Array[Vector2]:
         ret_val.append(dir * distance + mid_edge)
     return ret_val
 
+func GetOutline() -> Array:
+    var dims : Vector2 = GetDepthAndWidth() / 2.0
+    var points : Array[Vector2]
+    for point : Vector2 in [Vector2(dims.y, dims.x), Vector2(-dims.y, dims.x), Vector2(-dims.y, -dims.x), Vector2(dims.y, -dims.x)]:
+        points.append(position + point.rotated(rotation))
+    var ret_val : Array
+    ret_val.append([points[0], points[1], Color.BLUE]) # Flank
+    ret_val.append([points[1], points[2], Color.BLACK]) # Back
+    ret_val.append([points[2], points[3], Color.BLUE]) # Flank
+    ret_val.append([points[3], points[0], Color.GREEN]) # Front
+    return ret_val
+
 func GetPresentingFlank(attack_loc : Vector2) -> FlankType:
-    var dims : Vector2 = GetDim() / 2.0
-    var points : Array[Vector2] = [ dims, Vector2(-dims.x, dims.y), Vector2(-dims.x, -dims.y), Vector2(dims.x, -dims.y) ]
+    assert(attack_loc != position)
+    # Back up in case attack_loc is actually inside our squad
+    attack_loc = attack_loc + (attack_loc - position).normalized() * 100.0
+    var dims : Vector2 = GetDepthAndWidth() / 2.0
+    var points : Array[Vector2] = [Vector2(dims.y, dims.x), Vector2(-dims.y, dims.x), Vector2(-dims.y, -dims.x), Vector2(dims.y, -dims.x)]
     for i in range(points.size()):
         points[i] = position + points[i].rotated(rotation)
-        if i > 0:
-            var hit_point = Geometry2D.segment_intersects_segment(position, attack_loc, points[i], points[(i + 3) % 4])
-            if hit_point != null:
-                match i:
-                    1: return FlankType.Side
-                    2: return FlankType.Back
-                    3: return FlankType.Side
+    for i in range(points.size()):
+        var hit_point = Geometry2D.segment_intersects_segment(position, attack_loc, points[i], points[(i + 3) % 4])
+        if hit_point != null:
+            match i:
+                0: return FlankType.Front
+                1: return FlankType.Side
+                2: return FlankType.Back
+                3: return FlankType.Side
+    assert(not Geometry2D.is_point_in_polygon(attack_loc, points))
     assert(null != Geometry2D.segment_intersects_segment(position, attack_loc, points[0], points[3]))
     return FlankType.Front
 
 func GetFacingEdge(loc : Vector2) -> Array[Vector2]:
-    var dims : Vector2 = GetDim() / 2.0
-    var points : Array[Vector2] = [ dims, Vector2(-dims.x, dims.y), Vector2(-dims.x, -dims.y), Vector2(dims.x, -dims.y) ]
+    var dims : Vector2 = GetDepthAndWidth() / 2.0
+    var points : Array[Vector2] = [Vector2(dims.y, dims.x), Vector2(-dims.y, dims.x), Vector2(-dims.y, -dims.x), Vector2(dims.y, -dims.x)]
     for i in range(points.size()):
         points[i] = position + points[i].rotated(rotation)
     for i in range(points.size()):
@@ -141,7 +158,7 @@ func GetMoveDistance() -> float:
 
 func CanCharge(enemy : Squad) -> bool:
     # TODO: Add cost to turn towards closest spot on enemy
-    var distance_to_our_front : float = GetDim().y / 2.0
+    var distance_to_our_front : float = GetDepthAndWidth().y / 2.0
     var facing_edge : Array[Vector2] = enemy.GetFacingEdge(position)
     if facing_edge.is_empty():
         return false
@@ -177,12 +194,20 @@ func GetSortedMoves(game_state : GameState) -> Array[MMCAction]:
                 ret_val.append(ArmyControllerAction.CreateMelee(self, enemy))
         assert(not ret_val.is_empty())
     else:
+        var move_spots : Array[Vector2]
         for enemy : Squad in game_state.GetAllEnemy(self.GetArmy()):
             if CanCharge(enemy):
                 ret_val.append(ArmyControllerAction.CreateCharge(self, enemy))
             else:
                 for point : Vector2 in enemy.GetInterestingPointsNearMe(self.GetMoveDistance() * 0.95):
-                    ret_val.append(ArmyControllerAction.CreateMoveTowards(self, point))
+                    move_spots.append(point)
+        if move_spots.size() < 4:
+            for point in move_spots:
+                ret_val.append(ArmyControllerAction.CreateMoveTowards(self, point))
+        else:
+            move_spots.sort_custom(func(a, b) : return (a - position).length_squared() < (b - position).length_squared())
+            for i in range(3):
+                ret_val.append(ArmyControllerAction.CreateMoveTowards(self, move_spots[i]))
         ret_val.append(ArmyControllerAction.CreatePass(self))
     return ret_val
 
@@ -532,7 +557,7 @@ func GetWidthAndRanks() -> Vector2i:
             var s : int = int(ceil(sqrt(GetUnits())))
             return Vector2i(s, s)
 
-func GetDim() -> Vector2:
+func GetDepthAndWidth() -> Vector2:
     var unit_dim : Vector2 = GetUnitDim(_squad_type)
     match _formation:
         Formation.LINE:
@@ -568,7 +593,7 @@ func GetDim() -> Vector2:
             var ranks : int = ceil(GetUnits() / float(width))
             return Vector2(unit_dim.x * width, unit_dim.y * ranks)
         _:
-            assert(false, "GetDim() with unknown formation: " + str(_formation))
+            assert(false, "GetDepthAndWidth() with unknown formation: " + str(_formation))
             return unit_dim * sqrt(GetUnits())
 
 func SetSquadType(st : SquadType) -> void:

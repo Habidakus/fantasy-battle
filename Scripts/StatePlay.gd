@@ -44,7 +44,7 @@ func enter_state() -> void:
             var s : Squad = Squad.new()
             army.Add(s)
             var st : Squad.SquadType = Squad.SquadType.INFANTRY if i != 1 else Squad.SquadType.CAVALRY
-            s.Initialize(army, 15, st, Squad.Formation.TRIPLELINE, rnd) # DOUBLELINE)
+            s.Initialize(army, 15, st, Squad.Formation.DOUBLELINE, rnd)
             s.position.x = 20 + (1 + i) * (1130 - 20) / float(squads_per_army + 1)
             s.position.y = 23 + (0 + dy) * (627 - 23) / 8.0
             s.rotation = rot
@@ -61,6 +61,20 @@ func UpdateSquad(squad : Squad) -> void:
         assert(false, str(squad) + " has no visible component")
         return
     _visible_squads[squad.id].Update(squad)
+    #DebugDrawSquad(squad)
+
+var _draw_queue : Array
+func _draw() -> void:
+    for entry : Array in _draw_queue:
+        # point, point, color
+        draw_line(entry[0], entry[1], entry[2], 10, true)
+    _draw_queue.clear()
+
+func DebugDrawSquad(squad : Squad) -> void:
+    var outline : Array = squad.GetOutline()
+    for entry in outline:
+        _draw_queue.append(entry)
+    queue_redraw()
 
 func HideSquadBecauseTheyAreDead(id : int) -> void:
     if not _visible_squads.has(id):
@@ -73,17 +87,18 @@ func UpdateSquadHealth(old_squad_stats : Squad, new_squad_stats : Squad) -> void
     var bodies_to_place : int = old_squad_stats._units_wounded - new_squad_stats._units_wounded
     var wounds_to_place : int = old_squad_stats._units_healthy - new_squad_stats._units_healthy 
     for i in range(wounds_to_place):
-        var spot : Vector2 = old_squad_stats.GetWoundLocation(rnd)
+        var spot : Vector2 = new_squad_stats.GetWoundLocation(rnd)
         var wound_sprite : Sprite2D = Sprite2D.new()
         wound_sprite.texture = wound_textures[rnd.randi() % wound_textures.size()] 
         wound_sprite.position = spot
         wound_sprite.rotation = rnd.randf() * 2.0 * PI
         _ground_parallax_layer.add_child(wound_sprite)
     for i in range(bodies_to_place):
-        var spot : Vector2 = old_squad_stats.GetWoundLocation(rnd)
+        var spot : Vector2 = new_squad_stats.GetWoundLocation(rnd)
         var corpse_sprite : Sprite2D = Sprite2D.new()
         corpse_sprite.texture = corpse_textures[rnd.randi() % corpse_textures.size()] 
         corpse_sprite.position = spot
+        corpse_sprite.rotation = rnd.randf() - 0.5
         _ground_parallax_layer.add_child(corpse_sprite)
 
 func _process(delta: float) -> void:

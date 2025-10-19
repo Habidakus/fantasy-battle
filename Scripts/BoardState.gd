@@ -112,7 +112,7 @@ func MoveTowardsTarget(id : int, target_id : int) -> void:
     var dist_to_target : float = vec_to_target.length()
     var thrust : float = squad.GetMoveDistance() if dist_to_target > squad.GetMoveDistance() else dist_to_target
     var move_vec : Vector2 = thrust * forward_dir
-    var distance_to_our_front : float = squad.GetDim().y / 2.0
+    var distance_to_our_front : float = squad.GetDepthAndWidth().y / 2.0
     var projection_vec : Vector2 = distance_to_our_front * forward_dir
     
     var facing_edge : Array[Vector2] = target.GetFacingEdge(squad.position)
