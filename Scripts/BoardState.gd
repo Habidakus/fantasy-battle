@@ -14,6 +14,7 @@ func Clone() -> BoardState:
 			ret_val._turn_order.append(squad.Clone())
 	for entry in _in_combat:
 		ret_val._in_combat.append(entry)
+	ret_val._rocks = _rocks
 	return ret_val
 
 func Config(armies : Array[Army], rocks : Array[Rock], in_combat : Array[int]) -> void:
@@ -118,6 +119,19 @@ func CheckForCollisions(travelling_squad : Squad, destination : Vector2) -> Vect
 			for point_index in range(point_count):
 				var hit_point = Geometry2D.segment_intersects_segment(points[point_index], dest_points[point_index], squad_edge[0], squad_edge[1])
 				if hit_point != null:
+					var new_length : float = (hit_point - points[point_index]).length()
+					if new_length < shortened_length:
+						shortened_length = new_length
+	assert(_rocks.size() > 0)
+	for rock : Rock in _rocks:
+		var rock_point_count : int = rock._points.size()
+		for rock_point_index : int in range(rock_point_count):
+			var rp1 : Vector2 = rock._points[rock_point_index] + rock.position
+			var rp2 : Vector2 = rock._points[(rock_point_index + 1) % rock_point_count] + rock.position
+			for point_index in range(point_count):
+				var hit_point = Geometry2D.segment_intersects_segment(points[point_index], dest_points[point_index], rp1, rp2)
+				if hit_point != null:
+					print("Collides with rock at %s" % [hit_point])
 					var new_length : float = (hit_point - points[point_index]).length()
 					if new_length < shortened_length:
 						shortened_length = new_length
