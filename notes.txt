@@ -2,5 +2,9 @@ https://balagan.info/battalion-line-column-and-square-tactical-formations-during
 https://pixabay.com/sound-effects/search/military%20drums/
 
 - add cost for turning
+- if terrain overlaps, use Geometry2D.merge_polygons()
 - add pathfinding around terrain
+  - Theta*
+  - RRT (Rapidly exploring random tree)
+  - R2 or R2+
 - when computing AI move tree, all combat should be resolved in the most default/average outcome possible to calculate
