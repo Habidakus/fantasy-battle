@@ -101,7 +101,9 @@ func GetSquadById(id : int) -> Squad:
 	assert(false)
 	return null
 
-func CheckForCollisions(travelling_squad : Squad, destination : Vector2) -> Vector2:
+enum CollisionType { NOTHING, ENEMY, ALLY, TERRAIN }
+func CheckForCollisions(travelling_squad : Squad, destination : Vector2) -> Array:
+	var collision_type : CollisionType = CollisionType.NOTHING
 	var travel_vector : Vector2 = destination - travelling_squad.position
 	var travel_normal : Vector2 = travel_vector.normalized()
 	var travel_angle : float = travel_vector.angle()
@@ -122,7 +124,7 @@ func CheckForCollisions(travelling_squad : Squad, destination : Vector2) -> Vect
 					var new_length : float = (hit_point - points[point_index]).length()
 					if new_length < shortened_length:
 						shortened_length = new_length
-	assert(_rocks.size() > 0)
+						collision_type = CollisionType.ALLY if squad.GetArmy().GetController() == travelling_squad.GetArmy().GetController() else CollisionType.ENEMY
 	for rock : Rock in _rocks:
 		var rock_point_count : int = rock._points.size()
 		for rock_point_index : int in range(rock_point_count):
@@ -131,15 +133,15 @@ func CheckForCollisions(travelling_squad : Squad, destination : Vector2) -> Vect
 			for point_index in range(point_count):
 				var hit_point = Geometry2D.segment_intersects_segment(points[point_index], dest_points[point_index], rp1, rp2)
 				if hit_point != null:
-					print("Collides with rock at %s" % [hit_point])
 					var new_length : float = (hit_point - points[point_index]).length()
 					if new_length < shortened_length:
 						shortened_length = new_length
+						collision_type = CollisionType.TERRAIN
 	if shortened_length > travel_length:
-		return destination
+		return [destination, collision_type]
 	else:
 		#print("%s's shortened length = %s" % [travelling_squad, shortened_length])
-		return travelling_squad.position + travel_normal * shortened_length
+		return [travelling_squad.position + travel_normal * shortened_length, collision_type]
 	
 func DelaySquad(id : int, time : float) -> void:
 	var squad : Squad = GetSquadById(id)

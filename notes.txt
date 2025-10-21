@@ -1,6 +1,6 @@
 https://balagan.info/battalion-line-column-and-square-tactical-formations-during-the-napoleonic-wars
 https://pixabay.com/sound-effects/search/military%20drums/
 
-- add terrain
 - add cost for turning
+- add pathfinding around terrain
 - when computing AI move tree, all combat should be resolved in the most default/average outcome possible to calculate

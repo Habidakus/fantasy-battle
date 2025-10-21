@@ -35,7 +35,7 @@ func get_sorted_moves(_for_requesting_player : bool) -> Array[MMCAction]:
 		ret_val.append(ArmyControllerAction.CreateSidePass(_current_controller))
 		return ret_val
 
-func CheckForCollisions(travelling_squad : Squad, destination : Vector2) -> Vector2:
+func CheckForCollisions(travelling_squad : Squad, destination : Vector2) -> Array:
 	return _board_state.CheckForCollisions(travelling_squad, destination)
 
 func AssignNextSquadToGo() -> void:

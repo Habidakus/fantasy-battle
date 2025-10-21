@@ -202,21 +202,33 @@ func GetSortedMoves(game_state : GameState) -> Array[MMCAction]:
 				ret_val.append(ArmyControllerAction.CreateMelee(self, enemy))
 		assert(not ret_val.is_empty())
 	else:
-		var move_spots : Array[Vector2]
+		var move_spots : Array
 		for enemy : Squad in game_state.GetAllEnemy(self.GetArmy()):
 			if CanCharge(enemy):
 				ret_val.append(ArmyControllerAction.CreateCharge(self, enemy))
 			else:
 				for point : Vector2 in enemy.GetInterestingPointsNearMe(self.GetMoveDistance() * 0.95):
-					var shortened_point : Vector2 = game_state.CheckForCollisions(self, point)
-					move_spots.append(shortened_point)
+					move_spots.append(game_state.CheckForCollisions(self, point))
 		if move_spots.size() < 4:
 			for point in move_spots:
-				ret_val.append(ArmyControllerAction.CreateMoveTowards(self, point))
+				ret_val.append(ArmyControllerAction.CreateMoveTowards(self, point[0]))
 		else:
-			move_spots.sort_custom(func(a, b) : return (a - position).length_squared() < (b - position).length_squared())
+			move_spots.sort_custom(func(a, b) :
+				if a[1] != b[1]:
+					if a[1] == BoardState.CollisionType.TERRAIN:
+						return false
+					if b[1] == BoardState.CollisionType.TERRAIN:
+						return true
+					if b[1] == BoardState.CollisionType.NOTHING:
+						return false
+					if a[1] == BoardState.CollisionType.NOTHING:
+						return true
+				var l1 : float = (a[0] - position).length_squared()
+				var l2 : float = (b[0] - position).length_squared()
+				return l1 < l2
+			)
 			for i in range(3):
-				ret_val.append(ArmyControllerAction.CreateMoveTowards(self, move_spots[i]))
+				ret_val.append(ArmyControllerAction.CreateMoveTowards(self, move_spots[i][0]))
 		ret_val.append(ArmyControllerAction.CreatePass(self))
 	return ret_val
 
