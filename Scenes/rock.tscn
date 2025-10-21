@@ -1,0 +1,11 @@
+[gd_scene load_steps=2 format=3 uid="uid://byyq4olgroy4k"]
+
+[ext_resource type="Script" uid="uid://1qm1ixenb7uv" path="res://Scripts/Rock.gd" id="1_lgx4v"]
+
+[node name="Rock" type="Node2D"]
+script = ExtResource("1_lgx4v")
+
+[node name="Polygon2D" type="Polygon2D" parent="."]
+color = Color(0.25222144, 0.1227235, 0.05069068, 1)
+antialiased = true
+polygon = PackedVector2Array(88, 81, 97, -75, -91, -49, -86, 80)
