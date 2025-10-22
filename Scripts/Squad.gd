@@ -106,6 +106,9 @@ func GetInterestingPointsNearMe(distance : float) -> Array[Vector2]:
 		ret_val.append(dir * distance + mid_edge)
 	return ret_val
 
+func GetRadiiSquared() -> float:
+	var daw : Vector2 = GetDepthAndWidth() / 2.0
+	return daw.x * daw.x + daw.y * daw.y
 
 func GetLeadingEdgeAtRotation(angle : float) -> Array[Vector2]:
 	var dims : Vector2 = GetDepthAndWidth() / 2.0

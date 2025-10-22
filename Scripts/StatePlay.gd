@@ -7,6 +7,7 @@ class_name StatePlay extends StateMachineState
 @export var corpse_textures : Array[Texture2D]
 
 var _turn_engine : TurnEngine
+var _terrain_data : TerrainData = TerrainData.new()
 var _ground_parallax_layer : ParallaxLayer
 var _mist_parallax_layer : ParallaxLayer
 var _mist_direction : float
@@ -16,7 +17,6 @@ const _mist_max_speed : float = 15
 var rnd : RandomNumberGenerator = RandomNumberGenerator.new()
 var _armies : Array[Army]
 var _visible_squads : Dictionary = {}
-var _rocks : Array[Rock]
 # screen x: 20 to 1130
 # screen y: 23 to 627
 
@@ -37,6 +37,7 @@ func enter_state() -> void:
 	_armies[1].SetColor(Color.BLUE)
 	
 	const squads_per_army : int = 3
+	var squadsAndRadiiSquared : Array
 	for army : Army in _armies:
 		army.SetController(AIArmyController.new())
 		var dy = 1 if army == _armies[0] else 7
@@ -49,6 +50,8 @@ func enter_state() -> void:
 			s.position.x = 20 + (1 + i) * (1130 - 20) / float(squads_per_army + 1)
 			s.position.y = 23 + (0 + dy) * (627 - 23) / 8.0
 			s.rotation = rot
+			var radiiSquared : float = s.GetRadiiSquared()
+			squadsAndRadiiSquared.append([s.position, radiiSquared])
 			var vs : VisibleSquad = visible_squad_scene.instantiate() as VisibleSquad
 			_visible_squads[s.id] = vs
 			add_child(vs)
@@ -56,40 +59,8 @@ func enter_state() -> void:
 			#print("%d: %s %s" % [ s.id, army.GetPrimaryColor(), army.GetSecondaryColor()])
 			UpdateSquad(s)
 	
-	_place_terrain()
-	
-	_turn_engine.Config(_armies, _rocks, self, [])
-
-func _place_terrain() -> void:
-	var poss : Array = []
-	for r : int in range(25):
-		var loc : Vector2i
-		var close_to_squad : bool = true
-		while close_to_squad:
-			loc = Vector2i(rnd.randi() % 1150, rnd.randi() % 600)
-			close_to_squad = false
-			for army : Army in _armies:
-				for squad : Squad in army._squads:
-					if squad.position.distance_squared_to(loc) < (75 * 75):
-						close_to_squad = true
-		poss.append([loc, -1])
-	for r1 : int in range(25):
-		var p1 : Vector2i = poss[r1][0]
-		var mind : int = 1135 * 1135 * 2
-		for r2 : int in range(25):
-			if r1 == r2:
-				continue
-			var p2 : Vector2i = poss[r2][0]
-			var d : int = p1.distance_squared_to(p2)
-			if d < mind:
-				mind = d
-		poss[r1][1] = mind
-		
-	poss.sort_custom(func(a,b) : return a[1] < b[1])
-	for r : int in range(8):
-		var rock : Rock = Rock.Create(rnd, poss[r][0])
-		add_child(rock)
-		_rocks.append(rock)
+	_terrain_data.Setup(rnd, squadsAndRadiiSquared, self)
+	_turn_engine.Config(_armies, _terrain_data, self, [])
 
 func UpdateSquad(squad : Squad) -> void:
 	if not _visible_squads.has(squad.id):

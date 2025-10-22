@@ -5,8 +5,8 @@ var _pending_action : ArmyControllerAction
 var _state_play : StatePlay
 var _jcounter : JCounter = JCounter.Create("TurnEngine")
 
-func Config(armies : Array[Army], rocks : Array[Rock], state_play : StatePlay, in_combat : Array[int]) -> void:
-	_board_state.Config(armies, rocks, in_combat)
+func Config(armies : Array[Army], terrain_data : TerrainData, state_play : StatePlay, in_combat : Array[int]) -> void:
+	_board_state.Config(armies, terrain_data, in_combat)
 	_state_play = state_play
 	for army : Army in armies:
 		army.GetController().RegisterTurnEngine(self)

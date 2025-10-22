@@ -1,7 +1,7 @@
 class_name BoardState extends RefCounted
 
 var _armies : Array[Army]
-var _rocks : Array[Rock]
+var _terrain_data : TerrainData
 var _turn_order : Array[Squad]
 var _jcounter : JCounter = JCounter.Create("BoardState")
 var _in_combat : Array[int] = []
@@ -14,12 +14,12 @@ func Clone() -> BoardState:
 			ret_val._turn_order.append(squad.Clone())
 	for entry in _in_combat:
 		ret_val._in_combat.append(entry)
-	ret_val._rocks = _rocks
+	ret_val._terrain_data = _terrain_data
 	return ret_val
 
-func Config(armies : Array[Army], rocks : Array[Rock], in_combat : Array[int]) -> void:
+func Config(armies : Array[Army], terrain_data : TerrainData, in_combat : Array[int]) -> void:
 	_armies = armies
-	_rocks = rocks
+	_terrain_data = terrain_data
 	for army : Army in _armies:
 		assert(!army._squads.is_empty())
 		for squad : Squad in army._squads:
@@ -64,7 +64,7 @@ func GetAllEnemy(army : Army) -> Array[Squad]:
 	return []
 
 func GenerateGameState(squad : Squad) -> GameState:
-	return GameState.Create(squad, _armies, _rocks, _in_combat)
+	return GameState.Create(squad, _armies, _terrain_data, _in_combat)
 
 func GetOpposingController(controller : ArmyController) -> ArmyController:
 	assert(_armies.size() == 2)
@@ -125,18 +125,10 @@ func CheckForCollisions(travelling_squad : Squad, destination : Vector2) -> Arra
 					if new_length < shortened_length:
 						shortened_length = new_length
 						collision_type = CollisionType.ALLY if squad.GetArmy().GetController() == travelling_squad.GetArmy().GetController() else CollisionType.ENEMY
-	for rock : Rock in _rocks:
-		var rock_point_count : int = rock._points.size()
-		for rock_point_index : int in range(rock_point_count):
-			var rp1 : Vector2 = rock._points[rock_point_index] + rock.position
-			var rp2 : Vector2 = rock._points[(rock_point_index + 1) % rock_point_count] + rock.position
-			for point_index in range(point_count):
-				var hit_point = Geometry2D.segment_intersects_segment(points[point_index], dest_points[point_index], rp1, rp2)
-				if hit_point != null:
-					var new_length : float = (hit_point - points[point_index]).length()
-					if new_length < shortened_length:
-						shortened_length = new_length
-						collision_type = CollisionType.TERRAIN
+	var terrain_collision_dist : float = _terrain_data.CheckForCollision(points, dest_points)
+	if terrain_collision_dist < shortened_length:
+		shortened_length = terrain_collision_dist
+		collision_type = CollisionType.TERRAIN
 	if shortened_length > travel_length:
 		return [destination, collision_type]
 	else:
