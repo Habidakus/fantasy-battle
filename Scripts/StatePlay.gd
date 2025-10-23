@@ -38,6 +38,7 @@ func enter_state() -> void:
 	
 	const squads_per_army : int = 3
 	var squadsAndRadiiSquared : Array
+	const rockRadiusSquared : float = Rock.RADIUS * Rock.RADIUS * 1.5 * 1.5
 	for army : Army in _armies:
 		army.SetController(AIArmyController.new())
 		var dy = 1 if army == _armies[0] else 7
@@ -51,7 +52,7 @@ func enter_state() -> void:
 			s.position.y = 23 + (0 + dy) * (627 - 23) / 8.0
 			s.rotation = rot
 			var radiiSquared : float = s.GetRadiiSquared()
-			squadsAndRadiiSquared.append([s.position, radiiSquared])
+			squadsAndRadiiSquared.append([s.position, radiiSquared + rockRadiusSquared])
 			var vs : VisibleSquad = visible_squad_scene.instantiate() as VisibleSquad
 			_visible_squads[s.id] = vs
 			add_child(vs)

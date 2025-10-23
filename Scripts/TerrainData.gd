@@ -27,8 +27,15 @@ func Setup(rnd : RandomNumberGenerator, squadsAndRadiiSquared : Array, parent : 
 		poss[r1][1] = mind
 		
 	poss.sort_custom(func(a,b) : return a[1] < b[1])
-	for r : int in range(8):
+	var set_of_polygons : Array[PackedVector2Array]
+	for r : int in range(12):
 		var rock : Rock = Rock.Create(rnd, poss[r][0])
+		# TODO: Rather than create a rock, just create the points
+		set_of_polygons.append(rock.GetMapPoints())
+		rock.queue_free()
+
+	for polygon_points : PackedVector2Array in merge_multiple_polygons(set_of_polygons):
+		var rock : Rock = Rock.CreateFromPolygon(polygon_points, rnd)
 		_rocks.append(rock)
 		parent.add_child(rock)
 
@@ -47,3 +54,21 @@ func CheckForCollision(points : Array[Vector2], dest_points : Array[Vector2]) ->
 					if new_length < shortened_length:
 						shortened_length = new_length
 	return shortened_length
+
+static func merge_multiple_polygons(polygons: Array[PackedVector2Array]) -> Array[PackedVector2Array]:
+	if polygons.is_empty():
+		return []
+	var ret_val : Array[PackedVector2Array] = [polygons[0]]
+	for i in range(1, polygons.size()):
+		var current_polygon = polygons[i]
+		var found_merge : bool = false
+		for j in range(ret_val.size()):
+			if found_merge:
+				continue
+			var new_polygons = Geometry2D.merge_polygons(ret_val[j], current_polygon)
+			if new_polygons.size() == 1:
+				ret_val[j] = new_polygons[0]
+				found_merge = true
+		if found_merge == false:
+			ret_val.append(current_polygon)
+	return ret_val
