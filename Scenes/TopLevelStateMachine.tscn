@@ -1,4 +1,4 @@
-[gd_scene load_steps=21 format=3 uid="uid://otau0j5e6xpf"]
+[gd_scene load_steps=22 format=3 uid="uid://otau0j5e6xpf"]
 
 [ext_resource type="Script" uid="uid://da4jmxbeqpsyh" path="res://addons/statemachine/StateMachine.gd" id="1_eb3ea"]
 [ext_resource type="Script" uid="uid://cmo4rd026j7ny" path="res://addons/statemachine/StateMachineState_AnyKeyToContinue.gd" id="2_p0bqw"]
@@ -23,6 +23,9 @@
 [sub_resource type="LabelSettings" id="LabelSettings_oc3if"]
 font = ExtResource("3_dalco")
 font_size = 96
+
+[sub_resource type="NavigationPolygon" id="NavigationPolygon_lclh7"]
+agent_radius = 44.09
 
 [node name="TopLevelStateMachine" type="Node" node_paths=PackedStringArray("initial_state")]
 script = ExtResource("1_eb3ea")
@@ -251,3 +254,6 @@ size_flags_horizontal = 3
 size_flags_vertical = 3
 texture = ExtResource("8_wuua4")
 metadata/_edit_use_anchors_ = true
+
+[node name="NavRegion" type="NavigationRegion2D" parent="State_Play"]
+navigation_polygon = SubResource("NavigationPolygon_lclh7")

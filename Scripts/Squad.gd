@@ -211,7 +211,22 @@ func GetSortedMoves(game_state : GameState) -> Array[MMCAction]:
                 ret_val.append(ArmyControllerAction.CreateCharge(self, enemy))
             else:
                 for point : Vector2 in enemy.GetInterestingPointsNearMe(self.GetMoveDistance() * 0.95):
-                    move_spots.append(game_state.CheckForCollisions(self, point))
+                    var path : PackedVector2Array = game_state._board_state._terrain_data.GetPath(position, point)
+                    var path_size : int = path.size()
+                    var current_index : int = 0
+                    var blocked : bool = false
+                    while blocked == false && current_index < path_size:
+                        var dest_and_collision : Array = game_state.CheckForCollisions(self, path[current_index])
+                        if (dest_and_collision[0] - position).length_squared() < 1:
+                            current_index += 1
+                            continue
+                        move_spots.append(dest_and_collision)
+                        if dest_and_collision[1] != BoardState.CollisionType.NOTHING:
+                            blocked = true
+                        elif dest_and_collision[0] != path[current_index]:
+                            blocked = true
+                        else:
+                            current_index += 1
         if move_spots.size() < 4:
             for point in move_spots:
                 ret_val.append(ArmyControllerAction.CreateMoveTowards(self, point[0]))
@@ -228,7 +243,7 @@ func GetSortedMoves(game_state : GameState) -> Array[MMCAction]:
                         return true
                 var l1 : float = (a[0] - position).length_squared()
                 var l2 : float = (b[0] - position).length_squared()
-                return l1 < l2
+                return l1 > l2
             )
             for i in range(3):
                 ret_val.append(ArmyControllerAction.CreateMoveTowards(self, move_spots[i][0]))
