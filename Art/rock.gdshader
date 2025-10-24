@@ -30,8 +30,6 @@ vec3 get_noise_normal(vec2 uv) {
 }
 
 void fragment() {
-    // This will represent our rock's final normal.
-    vec3 final_normal;
     
     // Get the base normal from the polygon's distance field.
     vec3 sdf_normal = get_sdf_normal(UV, TEXTURE);
@@ -45,7 +43,7 @@ void fragment() {
     
     // Mix the normals based on the mix_factor.
     // This makes the edges use the smooth sdf_normal and the interior use the bumpy_normal.
-    final_normal = mix(sdf_normal, bumpy_normal, mix_factor * noise_strength);
+    vec3 final_normal = mix(sdf_normal, bumpy_normal, mix_factor * noise_strength);
     
     NORMAL = final_normal;
     COLOR = texture(TEXTURE, UV);
