@@ -77,6 +77,21 @@ func _draw() -> void:
 		draw_line(entry[0], entry[1], entry[2], 10, true)
 	_draw_queue.clear()
 
+func _add_draw_line(p1 : Vector2, p2 : Vector2, color : Color) -> void:
+	_draw_queue.append([p1, p2, color])
+	queue_redraw()
+
+func DrawPathLine(id1 : int, id2 : int, color : Color) -> void:
+	if not _visible_squads.has(id1):
+		return
+	if not _visible_squads.has(id2):
+		return
+	var vs1 : VisibleSquad = _visible_squads[id1]
+	var vs2 : VisibleSquad = _visible_squads[id2]
+	var path : PackedVector2Array = _terrain_data.GetPath(vs1.position, vs2.position, vs1)
+	for i in range(1, path.size()):
+		_add_draw_line(path[i - 1], path[i], color)
+
 func DebugDrawSquad(squad : Squad) -> void:
 	var outline : Array = squad.GetOutline()
 	for entry in outline:
