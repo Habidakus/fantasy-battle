@@ -25,9 +25,11 @@ func UpdateSquadHealth(actual_squad : Squad, new_squad_stats : Squad) -> void:
 func UpdateArmies() -> void:
     for army : Army in _board_state._armies:
         for squad : Squad in army._squads:
-            var other_squad : Squad = _board_state.GetSquadById(1 + (squad.id + 2) % 6)
-            if other_squad != null:
-                _state_play.DrawPathLine(squad.id, other_squad.id, army.GetColor())
+            var other_id : int = 1 + (squad.id + 2) % 6
+            if _board_state.HasSquad(other_id):
+                var other_squad : Squad = _board_state.GetSquadById(other_id)
+                if other_squad != null:
+                    _state_play.DrawPathLine(squad.id, other_squad.id, army.GetColor())
             _state_play.UpdateSquad(squad)
 
 func SubmitAction(action : ArmyControllerAction) -> void:

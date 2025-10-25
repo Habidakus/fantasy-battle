@@ -177,7 +177,7 @@ func CanCharge(enemy : Squad) -> bool:
     assert(hit_point != null)
     return hit_point.distance_to(position) < GetChargeDistance() + distance_to_our_front
 
-func InflictWound(rnd : RandomNumberGenerator) -> void:
+func InflictActualWound(rnd : RandomNumberGenerator) -> void:
     if IsDead():
         return
     if _units_wounded > 0:
@@ -186,6 +186,23 @@ func InflictWound(rnd : RandomNumberGenerator) -> void:
             return
     _units_healthy -= 1
     _units_wounded += 1
+
+const PREDICTED_WOUND_ITERATIONS : int = 25
+func InflictPredictedWounds(rnd: RandomNumberGenerator, amount : int) -> void:
+    var predictions : Array
+    for i in range(PREDICTED_WOUND_ITERATIONS):
+        predictions.append(_generate_virtual_damage(rnd, amount))
+    #TODO: Replace sort with a version of nth_element() that grabs just the median value
+    predictions.sort_custom(func(a, b) :return a[3] < b[3])
+    var index : int = PREDICTED_WOUND_ITERATIONS / 2;
+    _units_healthy -= predictions[index][0] + predictions[index][1] # healthy->dead + healthy->wounded
+    _units_wounded -= predictions[index][2] - predictions[index][1] # wounded->dead - healthy->wounded
+
+func _generate_virtual_damage(rnd: RandomNumberGenerator, amount : int) -> Array:
+    var healthyToDead : int = 0
+    var healthyToWounded : int = 0
+    var woundedToDead : int = 0
+    return [healthyToDead,healthyToWounded,woundedToDead,_calculate_damage_worth(healthyToDead, healthyToWounded, woundedToDead)]
 
 func GetRoll(rnd : RandomNumberGenerator, mods : int, disadvantage : bool) -> int:
     if _units_wounded > 0:
@@ -263,6 +280,12 @@ static func GetSumOfSquares(d : int) -> int:
         9: return 285
         9: return 385
         _: return GetSumOfSquares(d - 1)
+
+func _calculate_damage_worth(healthyToDead : int, healthyToWounded : int, woundedToDead : int ) -> float:
+    var h2dw : float = healthyToDead * (1 + _default_die_sides) / 2.0
+    var h2ww : float = healthyToWounded / 2.0
+    var w2dw : float = woundedToDead * _default_die_sides / 2.0
+    return h2dw + h2ww + w2dw
 
 func GetBaseScore() -> float:
     var ret_val : float = _units_healthy * (1 + _default_die_sides) / 2.0

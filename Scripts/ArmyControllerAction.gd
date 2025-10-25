@@ -32,30 +32,41 @@ func _to_string() -> String:
         _:
             return "%s will perform unknown action: %s" % [squad_name, Action.keys()[_action]]
 
-func ApplyToBoardState(board_state : BoardState, rnd : RandomNumberGenerator, prnt : bool) -> void:
+func ApplyPredictionToBoardState(board_state : BoardState, rnd : RandomNumberGenerator) -> void:
     match _action:
         Action.PASS:
-            _apply_pass(prnt, board_state)
+            _apply_pass(board_state)
         Action.MELEE:
-            _apply_melee(prnt, board_state, rnd)
+            _apply_melee(false, board_state, rnd)
         Action.CHARGE:
-            _apply_charge(prnt, board_state, rnd)
+            _apply_charge(false, board_state, rnd)
         Action.MOVE:
-            _apply_move(prnt, board_state)
+            _apply_move(board_state)
         _:
             assert(false, "Unknown action type: " + Action.keys()[_action])
 
-func _apply_pass(prnt: bool, board_state : BoardState) -> void:
-    if _squad != null:
-        if prnt:
-            print("%s passes" % [_squad])
-        board_state.DelaySquad(_squad.id, 2)
-    else:
-        if prnt:
-            print("Player passes")
+func ApplyActualToBoardState(board_state : BoardState, rnd : RandomNumberGenerator) -> void:
+    match _action:
+        Action.PASS:
+            _apply_pass(board_state)
+        Action.MELEE:
+            _apply_melee(true, board_state, rnd)
+        Action.CHARGE:
+            _apply_charge(true, board_state, rnd)
+        Action.MOVE:
+            _apply_move(board_state)
+        _:
+            assert(false, "Unknown action type: " + Action.keys()[_action])
 
-func _apply_melee(prnt: bool, board_state : BoardState, rnd : RandomNumberGenerator) -> void:
-    board_state.InflictDamage(prnt, _squad.id, _target.id, Squad.DamageType.MELEE, rnd)
+func _apply_pass(board_state : BoardState) -> void:
+    if _squad != null:
+        board_state.DelaySquad(_squad.id, 2)
+
+func _apply_melee(actual : bool, board_state : BoardState, rnd : RandomNumberGenerator) -> void:
+    if actual:
+        board_state.InflictActualDamage(_squad.id, _target.id, Squad.DamageType.MELEE, rnd)
+    else:
+        board_state.InflictPredictedDamage(_squad.id, _target.id, Squad.DamageType.MELEE, rnd)
     var both_alive : bool = true
     if board_state.RemoveSquadIfDead(_target.id):
         both_alive = false
@@ -66,9 +77,12 @@ func _apply_melee(prnt: bool, board_state : BoardState, rnd : RandomNumberGenera
     if both_alive:
         board_state.MarkInCombat(_squad.id, _target.id)
 
-func _apply_charge(prnt: bool, board_state : BoardState, rnd : RandomNumberGenerator) -> void:
+func _apply_charge(actual : bool, board_state : BoardState, rnd : RandomNumberGenerator) -> void:
     board_state.MoveTowardsTarget(_squad.id, _target.id)
-    board_state.InflictDamage(prnt, _squad.id, _target.id, Squad.DamageType.CHARGE, rnd)
+    if actual:
+        board_state.InflictActualDamage(_squad.id, _target.id, Squad.DamageType.CHARGE, rnd)
+    else:
+        board_state.InflictPredictedDamage(_squad.id, _target.id, Squad.DamageType.CHARGE, rnd)
     var both_alive : bool = true
     if board_state.RemoveSquadIfDead(_target.id):
         both_alive = false
@@ -79,9 +93,7 @@ func _apply_charge(prnt: bool, board_state : BoardState, rnd : RandomNumberGener
     if both_alive:
         board_state.MarkInCombat(_squad.id, _target.id)
 
-func _apply_move(prnt: bool, board_state : BoardState) -> void:
-    if prnt:
-        print("%s advances" % [_squad])
+func _apply_move(board_state : BoardState) -> void:
     if _target != null:
         board_state.MoveTowardsTarget(_squad.id, _target.id)
     else:
