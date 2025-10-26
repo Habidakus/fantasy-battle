@@ -40,6 +40,9 @@ func GenerateGameState(squad : Squad) -> GameState:
     return _board_state.GenerateGameState(squad)
 
 func _OnStateEnter_DetermineWhoGoesNext() -> void:
+    for army : Army in _board_state._armies:
+        if army._squads.is_empty():
+            print("Game Over")
     _board_state.OrderSquads()
     var debug_order_string : String = "Turn order:"
     for s : Squad in _board_state._turn_order:
