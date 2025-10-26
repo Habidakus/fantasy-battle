@@ -4,7 +4,7 @@ const rock_scene : PackedScene = preload("res://Scenes/rock.tscn")
 
 var _visual_points : PackedVector2Array
 var _collision_points : PackedVector2Array
-var _jcounter : JCounter = JCounter.Create("Rock")
+#var _jcounter : JCounter = JCounter.Create("Rock")
 
 const POINT_COUNT : int = 6
 const VISUAL_RADIUS : float = 40

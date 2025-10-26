@@ -4,7 +4,7 @@ var _pending_board_state : BoardState = null
 var _from : Dictionary = {}
 var _lerp_val : float = 0
 var _rnd : RandomNumberGenerator = RandomNumberGenerator.new()
-var _jcounter : JCounter = JCounter.Create("StateProcessOrders")
+#var _jcounter : JCounter = JCounter.Create("StateProcessOrders")
 
 func _process(delta: float) -> void:
     if _pending_board_state == null:

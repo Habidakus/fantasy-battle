@@ -7,7 +7,7 @@ var _action : Action
 var _target : Squad
 var _position : Vector2
 #var _rotation : float
-var _jcounter : JCounter = JCounter.Create("ArmyControllerAction")
+#var _jcounter : JCounter = JCounter.Create("ArmyControllerAction")
 
 func _to_string() -> String:
     if _squad == null:

@@ -3,7 +3,7 @@ class_name Army extends RefCounted
 var _squads : Array[Squad]
 var _color : Color = Color.WHITE
 var _controller : ArmyController
-var _jcounter : JCounter = JCounter.Create("Army")
+#var _jcounter : JCounter = JCounter.Create("Army")
 
 func Clone() -> Army:
     var ret_val : Army = Army.new()

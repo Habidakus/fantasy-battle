@@ -3,7 +3,7 @@ class_name TurnEngine extends StateMachine
 var _board_state : BoardState = BoardState.new()
 var _pending_action : ArmyControllerAction
 var _state_play : StatePlay
-var _jcounter : JCounter = JCounter.Create("TurnEngine")
+#var _jcounter : JCounter = JCounter.Create("TurnEngine")
 
 func Config(armies : Array[Army], terrain_data : TerrainData, state_play : StatePlay, in_combat : Array[int]) -> void:
     _board_state.Config(armies, terrain_data, in_combat)

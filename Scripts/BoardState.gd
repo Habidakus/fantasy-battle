@@ -3,7 +3,7 @@ class_name BoardState extends RefCounted
 var _armies : Array[Army]
 var _terrain_data : TerrainData
 var _turn_order : Array[Squad]
-var _jcounter : JCounter = JCounter.Create("BoardState")
+#var _jcounter : JCounter = JCounter.Create("BoardState")
 var _in_combat : Array[int] = []
 
 func Clone() -> BoardState:
@@ -199,7 +199,7 @@ func InflictPredictedDamage(attacker_id : int, target_id : int, damage_type : Sq
         if ad != bd:
             return ad > bd
         return a[0] > b[0])
-    var index : int = PREDICTED_ATTACK_ITERATIONS / 2
+    var index : int = int(PREDICTED_ATTACK_ITERATIONS / 2.0)
     attacker.InflictPredictedWounds(rnd, predictions[index][0])
     defender.InflictPredictedWounds(rnd, predictions[index][1])
 

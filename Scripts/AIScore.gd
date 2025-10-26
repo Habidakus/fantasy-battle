@@ -2,7 +2,7 @@ class_name AIScore extends MMCScore
 
 var _get_close : float = 0
 var _die_supremacy : float = 0
-var _jcounter : JCounter = JCounter.Create("AIScore")
+#var _jcounter : JCounter = JCounter.Create("AIScore")
 
 func _to_string() -> String:
     return "score=(%s, %s)" % [_die_supremacy, _get_close]
