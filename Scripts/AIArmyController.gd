@@ -1,6 +1,7 @@
 class_name AIArmyController extends ArmyController
 
 static var s_NEXT_ID : int = 0
+static var s_LOOK_AHEAD : int = 6
 
 var _name : String
 var _turn_engine : TurnEngine
@@ -11,7 +12,7 @@ func _to_string() -> String:
 
 func RequestOrders(squad : Squad) -> void:
     var game_state : GameState = _turn_engine.GenerateGameState(squad)
-    var action : ArmyControllerAction = _negamax_engine.get_best_action(game_state, 8)
+    var action : ArmyControllerAction = _negamax_engine.get_best_action(game_state, s_LOOK_AHEAD)
     if action != null:
         _turn_engine.SubmitAction(action)
 
