@@ -25,7 +25,7 @@ var _units_wounded : int
 var _default_die_sides : int = 6
 var _formation : Formation = Formation.DOUBLELINE
 var _squad_type : SquadType = SquadType.INFANTRY
-var _jcounter : JCounter = JCounter.Create("Squad")
+#var _jcounter : JCounter = JCounter.Create("Squad")
 
 func _to_string() -> String:
     var health : String = "(%d)[%d]" % [_units_healthy, _next_move] if _units_wounded == 0 else "(%d/%d)[%d]" % [_units_healthy, _units_wounded, _next_move]
@@ -194,7 +194,7 @@ func InflictPredictedWounds(rnd: RandomNumberGenerator, amount : int) -> void:
         predictions.append(_generate_virtual_damage(rnd, amount))
     #TODO: Replace sort with a version of nth_element() that grabs just the median value
     predictions.sort_custom(func(a, b) :return a[3] < b[3])
-    var index : int = PREDICTED_WOUND_ITERATIONS / 2;
+    var index : int = int(PREDICTED_WOUND_ITERATIONS / 2.0);
     _units_healthy -= predictions[index][0] + predictions[index][1] # healthy->dead + healthy->wounded
     _units_wounded -= predictions[index][2] - predictions[index][1] # wounded->dead - healthy->wounded
 
@@ -202,6 +202,25 @@ func _generate_virtual_damage(rnd: RandomNumberGenerator, amount : int) -> Array
     var healthyToDead : int = 0
     var healthyToWounded : int = 0
     var woundedToDead : int = 0
+    for i in range(amount):
+        # as we apply our virtual damage, the number of healthy, wounded, and dead will shift
+        var healthy = _units_healthy - (healthyToDead + healthyToWounded)
+        var wounded = _units_wounded + healthyToWounded - woundedToDead
+        var total = healthy + wounded
+        if total == 0:
+            # if we kill off the entire squad mid vitual damage application, just stop
+            break
+        assert(total > 0)
+        var roll : int = rnd.randi() % total
+        if roll < wounded:
+            # we need to keep track of whether this is someone who was healthy at the start of
+            # this damage application, or just some lingering wounded person we killed off.
+            if roll < healthyToWounded:
+                healthyToDead += 1
+            else:
+                woundedToDead += 1
+        else:
+            healthyToWounded += 1
     return [healthyToDead,healthyToWounded,woundedToDead,_calculate_damage_worth(healthyToDead, healthyToWounded, woundedToDead)]
 
 func GetRoll(rnd : RandomNumberGenerator, mods : int, disadvantage : bool) -> int:
