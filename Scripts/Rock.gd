@@ -28,6 +28,11 @@ static func CreateFromPolygon(points : PackedVector2Array, rnd : RandomNumberGen
     ret_val._assign_points_to_polygon(rnd)
     return ret_val
 
+const MAX_RADII : float = VISUAL_RADIUS * 1.5 + COLLISION_RADIUS_ADDITION
+const MAX_RADII_SQUARED : float = MAX_RADII * MAX_RADII
+func GetCollisionRadiiSquared() -> float:
+    return MAX_RADII_SQUARED
+
 func GetMapPoints_Visual() -> PackedVector2Array:
     var ret_val : PackedVector2Array
     for p : Vector2 in _visual_points:

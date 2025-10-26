@@ -117,17 +117,20 @@ func GetLeadingEdgeAtRotation(angle : float) -> Array[Vector2]:
     var pointC : Vector2 = (pointA + pointB) / 2.0
     return [pointA, pointC, pointB]
 
-func GetOutline() -> Array:
+func _get_outline_at_rotation(rot : float) -> Array:
     var dims : Vector2 = GetDepthAndWidth() / 2.0
     var points : Array[Vector2]
     for point : Vector2 in [Vector2(dims.y, dims.x), Vector2(-dims.y, dims.x), Vector2(-dims.y, -dims.x), Vector2(dims.y, -dims.x)]:
-        points.append(position + point.rotated(rotation))
+        points.append(position + point.rotated(rot))
     var ret_val : Array
     ret_val.append([points[0], points[1], Color.BLUE]) # Flank
     ret_val.append([points[1], points[2], Color.BLACK]) # Back
     ret_val.append([points[2], points[3], Color.BLUE]) # Flank
     ret_val.append([points[3], points[0], Color.GREEN]) # Front
     return ret_val
+
+func GetOutline() -> Array:
+    return _get_outline_at_rotation(rotation)
 
 func GetPresentingFlank(attack_loc : Vector2) -> FlankType:
     assert(attack_loc != position)
@@ -233,6 +236,69 @@ func GetRoll(rnd : RandomNumberGenerator, mods : int, disadvantage : bool) -> in
         roll = min(roll, rnd.randi() % sides)
     return roll
 
+func _get_destination_based_on_possible_rotation_limitations(loc : Vector2, board_state : BoardState) -> Vector2:
+    var delta_vector : Vector2 = loc - position
+    var delta_vector_length : float = delta_vector.length()
+    if delta_vector_length < 0.1:
+        return Vector2.INF
+    #var desired_angle_alt : float = position.angle_to(loc)
+    var desired_angle : float = delta_vector.angle()
+    #assert(desired_angle == desired_angle_alt)
+    var delta_vector_angle : float = wrapf(desired_angle - rotation, -PI, PI)
+    for army : Army in board_state._armies:
+        for other : Squad in army._squads:
+            if other.id == id:
+                continue
+            delta_vector_angle = _determine_max_angle_change(delta_vector_angle, func(angle) : return _does_overlap_other_squad_at_new_rotation(angle, other))
+            if delta_vector_angle == 0:
+                return Vector2.INF
+    for rock : Rock in board_state._terrain_data._rocks:
+        delta_vector_angle = _determine_max_angle_change(delta_vector_angle, func(angle) : return _does_overlap_rock_at_new_rotation(angle, rock))
+        if delta_vector_angle == 0:
+            return Vector2.INF
+    var final_angle : float = rotation + delta_vector_angle
+    var final_loc : Vector2 = position + Vector2.RIGHT.rotated(final_angle) * delta_vector_length
+    if final_angle == desired_angle:
+        assert((final_loc - loc).length_squared() < 0.1)
+    return final_loc
+
+func _determine_max_angle_change(delta_rotation : float, callable : Callable) -> float:
+    if callable.call(rotation + delta_rotation):
+        return _determine_max_angle_change_recursize(5, delta_rotation, 0, callable)
+    else:
+        return delta_rotation
+
+func _determine_max_angle_change_recursize(attempts : int, max_known_failure : float, min_known_success : float, callable : Callable) -> float:
+    var mid : float = (max_known_failure + min_known_success) / 2.0
+    if callable.call(rotation + mid):
+        if attempts == 0:
+            return min_known_success
+        return _determine_max_angle_change_recursize(attempts - 1, mid, min_known_success, callable)   
+    else:
+        if attempts == 0:
+            return mid
+        return _determine_max_angle_change_recursize(attempts - 1, max_known_failure, mid, callable)    
+
+func _does_overlap_other_squad_at_new_rotation(desired_angle : float, other : Squad) -> bool:
+    if (other.position - position).length_squared() > other.GetRadiiSquared() + GetRadiiSquared():
+        return false
+    for line : Array in _get_outline_at_rotation(desired_angle): # point1, point2, facing color
+        for other_line : Array in other.GetOutline(): # point1, point2, facing color
+            if null != Geometry2D.line_intersects_line(line[0], line[1], other_line[0], other_line[1]):
+                return true
+    return false
+
+func _does_overlap_rock_at_new_rotation(desired_angle : float, rock : Rock) -> bool:
+    if (rock.position - position).length_squared() > rock.GetCollisionRadiiSquared() + GetRadiiSquared():
+        return false
+    for line : Array in _get_outline_at_rotation(desired_angle): # point1, point2, facing color
+        var rock_points : PackedVector2Array = rock.GetMapPoints_Collision()
+        var rock_size : int = rock_points.size()
+        for rock_index : int in range(rock_size):
+            if null != Geometry2D.line_intersects_line(line[0], line[1], rock_points[rock_index], rock_points[(rock_index + 1) % rock_size]):
+                return true
+    return false
+
 func GetSortedMoves(game_state : GameState) -> Array[MMCAction]:
     var ret_val : Array[MMCAction]
     if game_state.IsInCombat(self):
@@ -252,14 +318,21 @@ func GetSortedMoves(game_state : GameState) -> Array[MMCAction]:
                     var current_index : int = 0
                     var blocked : bool = false
                     while blocked == false && current_index < path_size:
-                        var dest_and_collision : Array = game_state.CheckForCollisions(self, path[current_index])
+                        if (path[current_index] - position).length_squared() < 1:
+                            current_index += 1
+                            continue
+                        var destination : Vector2 = _get_destination_based_on_possible_rotation_limitations(path[current_index], game_state._board_state)
+                        if destination == Vector2.INF:
+                            blocked = true
+                            continue
+                        var dest_and_collision : Array = game_state.CheckForCollisions(self, destination)
                         if (dest_and_collision[0] - position).length_squared() < 1:
                             current_index += 1
                             continue
                         move_spots.append(dest_and_collision)
                         if dest_and_collision[1] != BoardState.CollisionType.NOTHING:
                             blocked = true
-                        elif dest_and_collision[0] != path[current_index]:
+                        elif dest_and_collision[0] != destination:
                             blocked = true
                         else:
                             current_index += 1
