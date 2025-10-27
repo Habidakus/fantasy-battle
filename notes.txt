@@ -3,4 +3,4 @@ https://pixabay.com/sound-effects/search/military%20drums/
 
 - add cost for turning
 - add UI/UX for human player
-- while continuing a melee, close the distance with our opponents each turn to compensate for damage taken
+- detect if a squad overlaps with another when offering possible moves, and provide some that allow them to un-merge

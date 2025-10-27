@@ -78,6 +78,20 @@ func GetWoundLocation(rnd : RandomNumberGenerator) -> Vector2:
     var loc : Vector2 = Vector2(rnd.randf() * depthAndWidth.y, rnd.randf() * depthAndWidth.x) - (Vector2(depthAndWidth.y, depthAndWidth.x) / 2.0)
     return position + loc.rotated(rotation)
 
+func TryAlignToEdge(edge : Array[Vector2]) -> void:
+    # TODO: make sure we rotate towards them and close with them
+    #       NOTE: we can only rotate if we can fit somehow. If not, we will continue to fight with bad flanking
+    var mid_point : Vector2 = (edge[0] + edge[1]) / 2.0
+    var edge_normal : Vector2 = (edge[0] - edge[1]).normalized()
+    var edge_perp : Vector2 = Vector2(edge_normal.y, -edge_normal.x)
+    var distance_to_our_front : float = GetDepthAndWidth().y / 2.0
+    if (mid_point + edge_perp).distance_squared_to(position) < (mid_point - edge_perp).distance_squared_to(position):
+        position = mid_point + edge_perp * distance_to_our_front
+        rotation = (-edge_perp).angle()
+    else:
+        position = mid_point - edge_perp * distance_to_our_front
+        rotation = edge_perp.angle()
+
 func MakeFlushAgainst(edge : Array[Vector2], pointOnLine : Vector2) -> void:
     var edgeDir : Vector2 = (edge[0] - edge[1])
     var facingDir : Vector2 = Vector2(-edgeDir.y, edgeDir.x).normalized()
@@ -356,7 +370,9 @@ func GetSortedMoves(game_state : GameState) -> Array[MMCAction]:
             )
             for i in range(3):
                 ret_val.append(ArmyControllerAction.CreateMoveTowards(self, move_spots[i][0]))
+    if ret_val.is_empty():
         ret_val.append(ArmyControllerAction.CreatePass(self))
+    #assert(!ret_val.is_empty())
     return ret_val
 
 static func GetSumOfSquares(d : int) -> int:

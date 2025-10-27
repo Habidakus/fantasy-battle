@@ -63,19 +63,24 @@ func _apply_pass(board_state : BoardState) -> void:
         board_state.DelaySquad(_squad.id, 2)
 
 func _apply_melee(actual : bool, board_state : BoardState, rnd : RandomNumberGenerator) -> void:
-    # TODO: make sure we rotate towards them and close with them
-    #       NOTE: we can only rotate if we can fit somehow. If not, we will continue to fight with bad flanking
+    var sharedEdge : Array[Vector2] = board_state.GetSharedEdge(_squad.id, _target.id)
     if actual:
         board_state.InflictActualDamage(_squad.id, _target.id, Squad.DamageType.MELEE, rnd)
     else:
         board_state.InflictPredictedDamage(_squad.id, _target.id, Squad.DamageType.MELEE, rnd)
+    
     var both_alive : bool = true
     if board_state.RemoveSquadIfDead(_target.id):
         both_alive = false
+    else:
+        board_state.AlignToEdge(_target.id, sharedEdge)
+
     if board_state.RemoveSquadIfDead(_squad.id):
         both_alive = false
     else:
+        board_state.AlignToEdge(_squad.id, sharedEdge)
         board_state.DelaySquad(_squad.id, _squad.GetMeleeTime())
+        
     if both_alive:
         board_state.MarkInCombat(_squad.id, _target.id)
 

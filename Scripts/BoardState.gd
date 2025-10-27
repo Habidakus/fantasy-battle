@@ -139,6 +139,19 @@ func DelaySquad(id : int, time : float) -> void:
     var squad : Squad = GetSquadById(id)
     squad._next_move += time
 
+func GetSharedEdge(left_id : int, right_id : int) -> Array[Vector2]:
+    var left : Squad = GetSquadById(left_id)
+    var right : Squad = GetSquadById(right_id)
+    var left_edge : Array[Vector2] = left.GetFacingEdge(right.position)
+    var right_edge : Array[Vector2] = right.GetFacingEdge(left.position)
+    if left_edge[0].distance_squared_to(right_edge[0]) < left_edge[0].distance_squared_to(right_edge[1]):
+        return [(left_edge[0] + right_edge[0]) / 2.0, (left_edge[1] + right_edge[1]) / 2.0]
+    else:
+        return [(left_edge[0] + right_edge[1]) / 2.0, (left_edge[1] + right_edge[0]) / 2.0]        
+
+func AlignToEdge(id : int, edge : Array[Vector2]) -> void:
+    GetSquadById(id).TryAlignToEdge(edge)
+
 func MoveTowardsTarget(id : int, target_id : int) -> void:
     var squad : Squad = GetSquadById(id)
     var target : Squad = GetSquadById(target_id)
