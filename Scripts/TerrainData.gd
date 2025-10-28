@@ -17,7 +17,7 @@ var _source_geom_data : NavigationMeshSourceGeometryData2D
 
 func Setup(rnd : RandomNumberGenerator, squadsAndRadiiSquared : Array, parent : Control, region : NavigationRegion2D) -> void:
     _map_rid = parent.get_world_2d().get_navigation_map()
-    # TODO: Create multiple regions for different unit widths, and then when an agent is attempting to plot a course it would use the smallest region's RID and call it's set_navigation_map(region_rid)
+	# TODO: Create multiple regions for different unit widths, and then when an agent is attempting to plot a course it would use the smallest region's RID and call it's set_navigation_map(region_rid)
     #var region_rid : RID = NavigationServer2D.region_create()
     NavigationServer2D.region_set_map(region.get_rid(), _map_rid)
     
