@@ -114,7 +114,7 @@ func HideSquadBecauseTheyAreDead(id : int) -> void:
 	
 func UpdateSquadHealth(old_squad_stats : Squad, new_squad_stats : Squad) -> void:
 	var bodies_to_place : int = old_squad_stats._units_wounded - new_squad_stats._units_wounded
-	var wounds_to_place : int = old_squad_stats._units_healthy - new_squad_stats._units_healthy 
+	var wounds_to_place : int = old_squad_stats._units_healthy - new_squad_stats._units_healthy
 	for i in range(wounds_to_place):
 		var spot : Vector2 = new_squad_stats.GetWoundLocation(rnd)
 		var wound_sprite : Sprite2D = Sprite2D.new()

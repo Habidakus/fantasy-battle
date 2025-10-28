@@ -21,11 +21,16 @@ func UpdateSquadHealth(actual_squad : Squad, new_squad_stats : Squad) -> void:
 	actual_squad._units_healthy = new_squad_stats._units_healthy
 	actual_squad._units_wounded = new_squad_stats._units_wounded
 	actual_squad._next_move = new_squad_stats._next_move
+	actual_squad._target_id = new_squad_stats._target_id
+	if _board_state.HasSquad(actual_squad.id) and _board_state.HasSquad(actual_squad._target_id):
+		var squad : Squad = _board_state.GetSquadById(actual_squad.id)
+		var other_squad : Squad = _board_state.GetSquadById(actual_squad._target_id)
+		_state_play.DrawPathLine(squad.id, other_squad.id, squad.GetArmy().GetColor())
 
 func UpdateArmies() -> void:
 	for army : Army in _board_state._armies:
 		for squad : Squad in army._squads:
-			var other_id : int = 1 + (squad.id + 2) % 6
+			var other_id : int = squad._target_id
 			if _board_state.HasSquad(other_id):
 				var other_squad : Squad = _board_state.GetSquadById(other_id)
 				if other_squad != null:

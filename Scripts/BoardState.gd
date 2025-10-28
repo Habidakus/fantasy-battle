@@ -27,6 +27,12 @@ func Config(armies : Array[Army], terrain_data : TerrainData, in_combat : Array[
 	for entry : int in in_combat:
 		_in_combat.append(entry)
 
+func AssignSquadTarget(squad_id : int, target_id : int) -> void:
+	if HasSquad(squad_id) and HasSquad(target_id):
+		GetSquadById(squad_id)._target_id = target_id
+	else:
+		assert(false, "Can't assign target %d to squad %d, as squad or target doesn't exist" % [target_id, squad_id])
+
 func MarkInCombat(left_id : int, right_id : int) -> void:
 	var left_index : int = left_id * 100 + right_id
 	var right_index : int = right_id * 100 + left_id

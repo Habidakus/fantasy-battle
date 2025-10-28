@@ -25,6 +25,7 @@ var _units_wounded : int
 var _default_die_sides : int = 6
 var _formation : Formation = Formation.DOUBLELINE
 var _squad_type : SquadType = SquadType.INFANTRY
+var _target_id : int = -1
 #var _jcounter : JCounter = JCounter.Create("Squad")
 
 func _to_string() -> String:
@@ -53,6 +54,7 @@ func Clone() -> Squad:
 	ret_val.position = position
 	ret_val.rotation = rotation
 	ret_val.id = id
+	ret_val._target_id = _target_id
 	return ret_val
 
 func GetMeleeTime() -> float:
@@ -343,6 +345,7 @@ func GetSortedMoves(game_state : GameState) -> Array[MMCAction]:
 						if (dest_and_collision[0] - position).length_squared() < 1:
 							current_index += 1
 							continue
+						dest_and_collision.append(enemy)
 						move_spots.append(dest_and_collision)
 						if dest_and_collision[1] != BoardState.CollisionType.NOTHING:
 							blocked = true
@@ -352,7 +355,7 @@ func GetSortedMoves(game_state : GameState) -> Array[MMCAction]:
 							current_index += 1
 		if move_spots.size() < 4:
 			for point in move_spots:
-				ret_val.append(ArmyControllerAction.CreateMoveTowards(self, point[0]))
+				ret_val.append(ArmyControllerAction.CreateMoveTowards(self, point[0], point[2]))
 		else:
 			move_spots.sort_custom(func(a, b) :
 				if a[1] != b[1]:
@@ -369,7 +372,7 @@ func GetSortedMoves(game_state : GameState) -> Array[MMCAction]:
 				return l1 > l2
 			)
 			for i in range(3):
-				ret_val.append(ArmyControllerAction.CreateMoveTowards(self, move_spots[i][0]))
+				ret_val.append(ArmyControllerAction.CreateMoveTowards(self, move_spots[i][0], move_spots[i][2]))
 	if ret_val.is_empty():
 		ret_val.append(ArmyControllerAction.CreatePass(self))
 	#assert(!ret_val.is_empty())
