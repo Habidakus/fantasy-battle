@@ -1,6 +1,8 @@
 https://balagan.info/battalion-line-column-and-square-tactical-formations-during-the-napoleonic-wars
 https://pixabay.com/sound-effects/search/military%20drums/
 
+The game's icon is from the Bayeux Tapestry.
+
 - add cost for turning
 - add UI/UX for human player
 - detect if a squad overlaps with another when offering possible moves, and provide some that allow them to un-merge

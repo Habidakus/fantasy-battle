@@ -13,7 +13,8 @@ config_version=5
 config/name="fantasy-battle"
 run/main_scene="res://Scenes/TopLevelStateMachine.tscn"
 config/features=PackedStringArray("4.5", "GL Compatibility")
-config/icon="res://icon.svg"
+config/icon="uid://bmk2d8lrpuojg"
+config/windows_native_icon="res://Art/Viking_Cavalry.ico"
 
 [editor_plugins]
 
