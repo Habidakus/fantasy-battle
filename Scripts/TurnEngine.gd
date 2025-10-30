@@ -15,6 +15,14 @@ func Config(armies : Array[Army], terrain_data : TerrainData, state_play : State
 
 func HideSquadBecauseTheyAreDead(id : int) -> void:
 	_state_play.HideSquadBecauseTheyAreDead(id)
+
+func _draw_closest_edge(squad : Squad) -> void:
+	var closest_edge : Array[Vector2] = squad._find_closest_collision_edge(_board_state)
+	if not closest_edge.is_empty():
+		var rap : Array = squad._find_rotation_and_position_against_edge(closest_edge)
+		if not rap.is_empty():
+			var draw_edge : Array[Vector2] = [rap[1], (closest_edge[0] + closest_edge[1]) / 2.0]
+			_state_play.DrawEdge(squad.id, draw_edge, Color.GREEN)
 	
 func UpdateSquadHealth(actual_squad : Squad, new_squad_stats : Squad) -> void:
 	_state_play.UpdateSquadHealth(actual_squad, new_squad_stats)
@@ -22,14 +30,17 @@ func UpdateSquadHealth(actual_squad : Squad, new_squad_stats : Squad) -> void:
 	actual_squad._units_wounded = new_squad_stats._units_wounded
 	actual_squad._next_move = new_squad_stats._next_move
 	actual_squad._target_id = new_squad_stats._target_id
-	if _board_state.HasSquad(actual_squad.id) and _board_state.HasSquad(actual_squad._target_id):
+	if _board_state.HasSquad(actual_squad.id):
 		var squad : Squad = _board_state.GetSquadById(actual_squad.id)
-		var other_squad : Squad = _board_state.GetSquadById(actual_squad._target_id)
-		_state_play.DrawPathLine(squad.id, other_squad.id, squad.GetArmy().GetColor())
+		_draw_closest_edge(squad)
+		if _board_state.HasSquad(actual_squad._target_id):
+			var other_squad : Squad = _board_state.GetSquadById(actual_squad._target_id)
+			_state_play.DrawPathLine(squad.id, other_squad.id, squad.GetArmy().GetColor())
 
 func UpdateArmies() -> void:
 	for army : Army in _board_state._armies:
 		for squad : Squad in army._squads:
+			_draw_closest_edge(squad)
 			var other_id : int = squad._target_id
 			if _board_state.HasSquad(other_id):
 				var other_squad : Squad = _board_state.GetSquadById(other_id)

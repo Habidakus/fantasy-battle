@@ -45,6 +45,25 @@ func GetMapPoints_Collision() -> PackedVector2Array:
 		ret_val.append(position + p)
 	return ret_val
 
+func GetFacingEdge(loc : Vector2) -> Array[Vector2]:
+	var closest_point : Vector2
+	var closest_point_ds : float = 1024 * 1024 * 2
+	var penult_point : Vector2
+	var penult_point_ds : float = 1024 * 1024 * 2
+	
+	for relative_p : Vector2 in _collision_points:
+		var p : Vector2 = relative_p + position
+		var d : float = p.distance_squared_to(loc)
+		if d < closest_point_ds:
+			penult_point_ds = closest_point_ds
+			penult_point = closest_point
+			closest_point_ds = d
+			closest_point = p
+		elif d < penult_point_ds:
+			penult_point_ds = d
+			penult_point = p
+	return [closest_point, penult_point]
+
 func _initialize(rnd : RandomNumberGenerator, loc : Vector2i):
 	for i in range(POINT_COUNT):
 		var angle : float = float(i) * 2 * PI / float(POINT_COUNT) + rnd.randf() * 2 * PI / float(3 * POINT_COUNT)

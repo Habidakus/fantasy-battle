@@ -88,6 +88,13 @@ func _add_draw_line(p1 : Vector2, p2 : Vector2, color : Color) -> void:
 	_draw_queue.append([p1, p2, color])
 	queue_redraw()
 
+func DrawEdge(id : int, edge : Array[Vector2], color : Color) -> void:
+	if not _visible_squads.has(id):
+		return
+	var vs : VisibleSquad = _visible_squads[id]
+	_add_draw_line(vs.position, (edge[0] + edge[1]) / 2.0, color)
+	_add_draw_line(edge[0], edge[1], color)
+
 func DrawPathLine(id1 : int, id2 : int, color : Color) -> void:
 	if not _visible_squads.has(id1):
 		return

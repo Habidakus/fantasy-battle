@@ -62,7 +62,10 @@ func GetMeleeTime() -> float:
 
 func GetChargeTime() -> float:
 	return 3 if _squad_type != SquadType.CAVALRY else 5
-	
+
+func GetChangeFormationTime() -> float:
+	return 4 if _squad_type != SquadType.CAVALRY else 6
+
 func GetMoveTime() -> float:
 	return 3 if _squad_type != SquadType.CAVALRY else 5
 
@@ -79,6 +82,18 @@ func GetWoundLocation(rnd : RandomNumberGenerator) -> Vector2:
 	var depthAndWidth : Vector2 = GetDepthAndWidth()
 	var loc : Vector2 = Vector2(rnd.randf() * depthAndWidth.y, rnd.randf() * depthAndWidth.x) - (Vector2(depthAndWidth.y, depthAndWidth.x) / 2.0)
 	return position + loc.rotated(rotation)
+
+func _find_rotation_and_position_against_edge(edge : Array[Vector2]) -> Array: # [rotation, position]
+	var edge_normal : Vector2 = (edge[0] - edge[1]).normalized()
+	var edge_perp : Vector2 = Vector2(edge_normal.y, -edge_normal.x)
+	var align_point : Vector2 = Geometry2D.get_closest_point_to_segment_uncapped(position, edge[0], edge[1])
+	var distance_to_our_side : float = 1.0 + GetDepthAndWidth().x / 2.0
+	var new_pos : Vector2
+	if (align_point + edge_perp).distance_squared_to(position) < (align_point - edge_perp).distance_squared_to(position):
+		new_pos = align_point + edge_perp * distance_to_our_side
+	else:
+		new_pos = align_point - edge_perp * distance_to_our_side
+	return [edge_normal.angle(), new_pos]
 
 func TryAlignToEdge(edge : Array[Vector2]) -> void:
 	# TODO: make sure we rotate towards them and close with them
@@ -326,6 +341,7 @@ func GetSortedMoves(game_state : GameState) -> Array[MMCAction]:
 		var move_spots : Array
 		for enemy : Squad in game_state.GetAllEnemy(self.GetArmy()):
 			if CanCharge(enemy):
+				# TODO: Make sure we don't charge other squads or rocks
 				ret_val.append(ArmyControllerAction.CreateCharge(self, enemy))
 			else:
 				for point : Vector2 in enemy.GetInterestingPointsNearMe(self.GetMoveDistance() * 0.95):
@@ -354,8 +370,16 @@ func GetSortedMoves(game_state : GameState) -> Array[MMCAction]:
 						else:
 							current_index += 1
 		if move_spots.size() < 4:
-			for point in move_spots:
-				ret_val.append(ArmyControllerAction.CreateMoveTowards(self, point[0], point[2]))
+			if move_spots.is_empty():
+				var closestEdge : Array[Vector2] = _find_closest_collision_edge(game_state._board_state)
+				if not closestEdge.is_empty():
+					var rot_and_position : Array = _find_rotation_and_position_against_edge(closestEdge)
+					if not rot_and_position.is_empty():
+						ret_val.append(ArmyControllerAction.ChangeFormation(self, _formation, rot_and_position[0], rot_and_position[1]))
+						ret_val.append(ArmyControllerAction.ChangeFormation(self, _formation, fposmod(rot_and_position[0] + PI, 2 * PI) - PI , rot_and_position[1]))
+			else:
+				for point in move_spots:
+					ret_val.append(ArmyControllerAction.CreateMoveTowards(self, point[0], point[2]))
 		else:
 			move_spots.sort_custom(func(a, b) :
 				if a[1] != b[1]:
@@ -377,6 +401,32 @@ func GetSortedMoves(game_state : GameState) -> Array[MMCAction]:
 		ret_val.append(ArmyControllerAction.CreatePass(self))
 	#assert(!ret_val.is_empty())
 	return ret_val
+
+func _find_closest_collision_edge(board_state : BoardState) -> Array[Vector2]:
+	var closest_edge : Array[Vector2] = []
+	var closest_edge_dist_squared : float = 1024 * 1024 * 2
+	var our_radii_squared : float = GetRadiiSquared() + GetMoveDistance() * GetMoveDistance()
+	for squad : Squad in board_state._turn_order:
+		if squad.id == id:
+			continue
+		if squad.position.distance_squared_to(position) > squad.GetRadiiSquared() + our_radii_squared:
+			continue
+		var facing_edge : Array[Vector2] = squad.GetFacingEdge(position)
+		if not facing_edge.is_empty():
+			var facing_edge_distance_squared : float = Geometry2D.get_closest_point_to_segment(position, facing_edge[0], facing_edge[1]).distance_squared_to(position)
+			if facing_edge_distance_squared < closest_edge_dist_squared:
+				closest_edge_dist_squared = facing_edge_distance_squared
+				closest_edge = facing_edge
+	for rock : Rock in board_state._terrain_data._rocks:
+		if rock.position.distance_squared_to(position) > rock.GetCollisionRadiiSquared() + our_radii_squared:
+			continue
+		var facing_edge : Array[Vector2] = rock.GetFacingEdge(position)
+		if not facing_edge.is_empty():
+			var facing_edge_distance_squared : float = Geometry2D.get_closest_point_to_segment(position, facing_edge[0], facing_edge[1]).distance_squared_to(position)
+			if facing_edge_distance_squared < closest_edge_dist_squared:
+				closest_edge_dist_squared = facing_edge_distance_squared
+				closest_edge = facing_edge
+	return closest_edge
 
 static func GetSumOfSquares(d : int) -> int:
 	match d:

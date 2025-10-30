@@ -1,11 +1,13 @@
 class_name ArmyControllerAction extends MMCAction
 
-enum Action { PASS, MELEE, CHARGE, MOVE }
+enum Action { PASS, MELEE, CHARGE, MOVE, CHANGE_FORMATION }
 
 var _squad : Squad
 var _action : Action
 var _target : Squad
+var _rotation : float
 var _position : Vector2 = Vector2.INF
+var _formation : Squad.Formation
 #var _rotation : float
 #var _jcounter : JCounter = JCounter.Create("ArmyControllerAction")
 
@@ -29,6 +31,11 @@ func _to_string() -> String:
 				return "%s will move towards %s" % [squad_name, target_name]
 			else:
 				return "%s will move to location" % [squad_name]
+		Action.CHANGE_FORMATION:
+			if _squad._formation == _formation:
+				return "%s will teleport" % [squad_name]
+			else:
+				return "%s will change formation to %s" % [squad_name, Squad.Formation.keys()[_formation]]
 		_:
 			return "%s will perform unknown action: %s" % [squad_name, Action.keys()[_action]]
 
@@ -42,6 +49,8 @@ func ApplyPredictionToBoardState(board_state : BoardState, rnd : RandomNumberGen
 			_apply_charge(false, board_state, rnd)
 		Action.MOVE:
 			_apply_move(board_state)
+		Action.CHANGE_FORMATION:
+			_apply_change_formation(board_state)
 		_:
 			assert(false, "Unknown action type: " + Action.keys()[_action])
 
@@ -55,6 +64,8 @@ func ApplyActualToBoardState(board_state : BoardState, rnd : RandomNumberGenerat
 			_apply_charge(true, board_state, rnd)
 		Action.MOVE:
 			_apply_move(board_state)
+		Action.CHANGE_FORMATION:
+			_apply_change_formation(board_state)
 		_:
 			assert(false, "Unknown action type: " + Action.keys()[_action])
 
@@ -73,12 +84,14 @@ func _apply_melee(actual : bool, board_state : BoardState, rnd : RandomNumberGen
 	if board_state.RemoveSquadIfDead(_target.id):
 		both_alive = false
 	else:
-		board_state.AlignToEdge(_target.id, sharedEdge)
+		if not sharedEdge.is_empty():
+			board_state.AlignToEdge(_target.id, sharedEdge)
 
 	if board_state.RemoveSquadIfDead(_squad.id):
 		both_alive = false
 	else:
-		board_state.AlignToEdge(_squad.id, sharedEdge)
+		if not sharedEdge.is_empty():
+			board_state.AlignToEdge(_squad.id, sharedEdge)
 		board_state.DelaySquad(_squad.id, _squad.GetMeleeTime())
 		
 	if both_alive:
@@ -110,6 +123,10 @@ func _apply_move(board_state : BoardState) -> void:
 	board_state.AssignSquadTarget(_squad.id, _target.id)
 	board_state.DelaySquad(_squad.id, _squad.GetMoveTime())
 
+func _apply_change_formation(board_state : BoardState) -> void:
+	board_state.ChangeFormation(_squad.id, _formation, _position, _rotation)
+	board_state.DelaySquad(_squad.id, _squad.GetChangeFormationTime())
+
 static func _create(squad : Squad, action : Action) -> ArmyControllerAction:
 	var ret_val :ArmyControllerAction = ArmyControllerAction.new()
 	ret_val._action = action
@@ -132,6 +149,13 @@ static func CreateMoveAt(squad : Squad, target : Squad) -> ArmyControllerAction:
 	assert(squad.GetArmy() != target.GetArmy())
 	var ret_val : ArmyControllerAction = ArmyControllerAction._create(squad, Action.MOVE)
 	ret_val._target = target
+	return ret_val
+
+static func ChangeFormation(squad : Squad, formation : Squad.Formation, rot : float, loc : Vector2) -> ArmyControllerAction:
+	var ret_val : ArmyControllerAction = ArmyControllerAction._create(squad, Action.CHANGE_FORMATION)
+	ret_val._position = loc
+	ret_val._rotation = rot
+	ret_val._formation = formation
 	return ret_val
 
 static func CreateMoveTowards(squad : Squad, loc : Vector2, target : Squad) -> ArmyControllerAction:

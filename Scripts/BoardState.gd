@@ -149,7 +149,11 @@ func GetSharedEdge(left_id : int, right_id : int) -> Array[Vector2]:
 	var left : Squad = GetSquadById(left_id)
 	var right : Squad = GetSquadById(right_id)
 	var left_edge : Array[Vector2] = left.GetFacingEdge(right.position)
+	if left_edge.is_empty():
+		return []
 	var right_edge : Array[Vector2] = right.GetFacingEdge(left.position)
+	if right_edge.is_empty():
+		return []
 	if left_edge[0].distance_squared_to(right_edge[0]) < left_edge[0].distance_squared_to(right_edge[1]):
 		return [(left_edge[0] + right_edge[0]) / 2.0, (left_edge[1] + right_edge[1]) / 2.0]
 	else:
@@ -183,6 +187,12 @@ func MoveTowardsTarget(id : int, target_id : int) -> void:
 		squad.position = squad.position + move_vec
 	else:
 		squad.MakeFlushAgainst(facing_edge, hit_point)
+
+func ChangeFormation(id : int, frmtn : Squad.Formation, pos : Vector2, rot : float) -> void:
+	var squad : Squad = GetSquadById(id)
+	squad._formation = frmtn
+	squad.rotation = rot
+	squad.position = pos
 
 func MoveTowardsLocation(id : int, location : Vector2) -> void:
 	var squad : Squad = GetSquadById(id)
