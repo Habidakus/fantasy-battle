@@ -21,18 +21,18 @@ var _default_die_sides : int = 6
 #      - if they are not equal remove those rolls from each side and apply a wound to the lesser side
 
 func RollAttack(rnd : RandomNumberGenerator, mods : int) -> int:
-    var sides : int = _default_die_sides + mods
-    assert(_is_alive)
-    if _is_wounded:
-        sides -= 1
-    return rnd.randi() % sides
+	var sides : int = _default_die_sides + mods
+	assert(_is_alive)
+	if _is_wounded:
+		sides -= 1
+	return rnd.randi() % sides
 
 static func ApplyDamage(unitA : Unit, unitB : Unit, rollA: int, rollB: int) -> void:
-    assert(unitA._is_alive)
-    assert(unitB._is_alive)
-    if rollA == rollB:
-        return
-    if rollA > rollB:
-        unitB.ApplyWound()
-    else:
-        unitA.ApplyWound()
+	assert(unitA._is_alive)
+	assert(unitB._is_alive)
+	if rollA == rollB:
+		return
+	if rollA > rollB:
+		unitB.ApplyWound()
+	else:
+		unitA.ApplyWound()
