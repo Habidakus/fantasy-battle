@@ -1,7 +1,7 @@
 class_name StatePlay extends StateMachineState
 
-@export var visible_squad_scene : PackedScene = preload("res://Scenes/visible_squad.tscn")
-@export var turn_engine_scene : PackedScene = preload("res://Scenes/TurnEngine.tscn")
+@export var _visible_squad_scene : PackedScene = preload("res://Scenes/visible_squad.tscn")
+@export var _turn_engine_scene : PackedScene = preload("res://Scenes/TurnEngine.tscn")
 
 @export var wound_textures : Array[Texture2D]
 @export var corpse_textures : Array[Texture2D]
@@ -28,7 +28,7 @@ func _ready() -> void:
 	_navigation_region = find_child("NavRegion") as NavigationRegion2D
 	_mist_direction = rnd.randf() * 360.0
 	_mist_speed = rnd.randf() * (_mist_max_speed - _mist_min_speed) + _mist_min_speed
-	_turn_engine = turn_engine_scene.instantiate() as TurnEngine
+	_turn_engine = _turn_engine_scene.instantiate() as TurnEngine
 	add_child(_turn_engine)
 
 func enter_state() -> void:
@@ -56,7 +56,7 @@ func enter_state() -> void:
 			s.rotation = rot
 			var radiiSquared : float = s.GetRadiiSquared()
 			squadsAndRadiiSquared.append([s.position, radiiSquared + rockRadiusSquared])
-			var vs : VisibleSquad = visible_squad_scene.instantiate() as VisibleSquad
+			var vs : VisibleSquad = _visible_squad_scene.instantiate() as VisibleSquad
 			_visible_squads[s.id] = vs
 			add_child(vs)
 			vs.Config(s._squad_type, army.GetPrimaryColor(), army.GetSecondaryColor())
