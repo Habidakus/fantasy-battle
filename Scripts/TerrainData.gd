@@ -87,21 +87,55 @@ func GetPath(p1 : Vector2, p2 : Vector2) -> PackedVector2Array:
 	var ret_val : PackedVector2Array = NavigationServer2D.map_get_path(_map_rid, p1, p2, true)
 	return ret_val
 
-func CheckForCollision(points : Array[Vector2], dest_points : Array[Vector2]) -> float:
+func CheckForCollisionAgainstFacingEdge(facing_edge_start : Array[Vector2], facing_edge_end : Array[Vector2]) -> float:
 	var shortened_length : float = WORLD_SIZE.length_squared()
-	var point_count : int = points.size()
+	#var squad_advance_area : PackedVector2Array = [facing_edge_start[0], facing_edge_start[1], facing_edge_end[1], facing_edge_end[0]]
 	for rock : Rock in _rocks:
-		var rock_point_count : int = rock._collision_points.size()
-		for rock_point_index : int in range(rock_point_count):
-			var rp1 : Vector2 = rock._collision_points[rock_point_index] + rock.position
-			var rp2 : Vector2 = rock._collision_points[(rock_point_index + 1) % rock_point_count] + rock.position
-			for point_index in range(point_count):
-				var hit_point = Geometry2D.segment_intersects_segment(points[point_index], dest_points[point_index], rp1, rp2)
-				if hit_point != null:
-					var new_length : float = (hit_point - points[point_index]).length()
-					if new_length < shortened_length:
-						shortened_length = new_length
+		# TODO: If we are running into lots of rocks, shorten the squad_advance_area so we check against less of a surface
+		var r0 : Vector2 = rock.DoesLineIntersect_Visual(facing_edge_start[0], facing_edge_end[0])
+		if not r0 == Vector2.INF:
+			var l0 : float = (r0 - facing_edge_start[0]).length() / (facing_edge_end[0] - facing_edge_start[0]).length()
+			var t0 : float = _check_for_collision_against_facing_edge_recursive(rock, 5, facing_edge_start, facing_edge_end, 0, l0)
+			if t0 < shortened_length:
+				shortened_length = t0
+			continue
+		var r1 : Vector2 = rock.DoesLineIntersect_Visual(facing_edge_start[1], facing_edge_end[1])
+		if not r1 == Vector2.INF:
+			var l1 : float = (r1 - facing_edge_start[1]).length() / (facing_edge_end[1] - facing_edge_start[1]).length()
+			var t1 : float = _check_for_collision_against_facing_edge_recursive(rock, 5, facing_edge_start, facing_edge_end, 0, l1)
+			if t1 < shortened_length:
+				shortened_length = t1
+			continue
+		var r2 : Vector2 = rock.DoesLineIntersect_Visual(facing_edge_end[0], facing_edge_end[1])
+		if not r2 == Vector2.INF:
+			var l2 : float = (facing_edge_end[1] - facing_edge_start[1]).length()
+			var t2 : float = _check_for_collision_against_facing_edge_recursive(rock, 5, facing_edge_start, facing_edge_end, 0, l2)
+			if t2 < shortened_length:
+				shortened_length = t2
 	return shortened_length
+
+func _check_for_collision_against_facing_edge_recursive(rock : Rock, count : int, facing_edge_start : Array[Vector2], facing_edge_end : Array[Vector2], min_is_safe : float, max_collission : float) -> float:
+	if count <= 0:
+		return min_is_safe
+
+	var dir : Vector2 = (facing_edge_end[0] - facing_edge_start[0]).normalized()
+	var mid_dist : float = (min_is_safe + max_collission) / 2.0
+
+	var m0 : Vector2 = facing_edge_start[0] +  dir * mid_dist
+	var r0 : Vector2 = rock.DoesLineIntersect_Visual(facing_edge_start[0], m0)
+	if not r0 == Vector2.INF:
+		return _check_for_collision_against_facing_edge_recursive(rock, count - 1, facing_edge_start, facing_edge_end, min_is_safe, mid_dist)
+
+	var m1 : Vector2 = facing_edge_start[1] +  dir * mid_dist
+	var r1 : Vector2 = rock.DoesLineIntersect_Visual(facing_edge_start[1], m1)
+	if not r1 == Vector2.INF:
+		return _check_for_collision_against_facing_edge_recursive(rock, count - 1, facing_edge_start, facing_edge_end, min_is_safe, mid_dist)
+		
+	var r2 : Vector2 = rock.DoesLineIntersect_Visual(m0, m1)
+	if not r2 == Vector2.INF:
+		return _check_for_collision_against_facing_edge_recursive(rock, count - 1, facing_edge_start, facing_edge_end, min_is_safe, mid_dist)
+
+	return _check_for_collision_against_facing_edge_recursive(rock, count - 1, facing_edge_start, facing_edge_end, mid_dist, max_collission)
 
 static func merge_multiple_polygons(polygons: Array[PackedVector2Array]) -> Array[PackedVector2Array]:
 	if polygons.is_empty():

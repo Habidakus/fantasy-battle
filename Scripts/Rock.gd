@@ -33,6 +33,14 @@ const MAX_RADII_SQUARED : float = MAX_RADII * MAX_RADII
 func GetCollisionRadiiSquared() -> float:
 	return MAX_RADII_SQUARED
 
+func DoesLineIntersect_Visual(p1 : Vector2,  p2 : Vector2) -> Vector2:
+	for i : int in range(_visual_points.size()):
+		var j : int = (i + 1) % _visual_points.size()
+		var intersect = Geometry2D.segment_intersects_segment(p1, p2, _visual_points[i], _visual_points[j])
+		if intersect != null:
+			return intersect as Vector2
+	return Vector2.INF
+
 func GetMapPoints_Visual() -> PackedVector2Array:
 	var ret_val : PackedVector2Array
 	for p : Vector2 in _visual_points:
