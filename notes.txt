@@ -5,5 +5,7 @@ The game's icon is from the Bayeux Tapestry.
 
 - add cost for turning
 - add UI/UX for human player
-- detect if, after applying an action, a squad overlaps another squad, or a a rock
+- detect if, after applying an action, a squad overlaps another squad
 - detect if a squad overlaps with another when offering possible moves, and provide some that allow them to un-merge
+- Fix the formation manuever so that it never overlaps with a rock
+- make it so that any unit that can only pass has a very negative score?
