@@ -9,8 +9,8 @@ class_name MMCScore extends RefCounted
 ## can be as simple a returning [score] * -1.  However if the score is more complex you might need to
 ## provide more extensive logic here.
 func reversed() -> MMCScore:
-    assert(false, "The derived MMCScore class must implement reversed()")
-    return null
+	assert(false, "The derived MMCScore class must implement reversed()")
+	return null
 
 ## Returns true only if the current score is better for the Computer Player (the one we're doing all this
 ## computation for) than it would be for the human opponent.

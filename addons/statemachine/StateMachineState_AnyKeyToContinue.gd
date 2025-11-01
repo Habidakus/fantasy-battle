@@ -17,21 +17,21 @@ var _countdown : float = 0
 var _leave_tween : Tween = null
 
 func _process(delta: float) -> void:
-    if time_out_in_seconds > 0:
-        _countdown += delta
-        if _countdown > time_out_in_seconds:
-            our_state_machine.switch_state(next_state.name)
+	if time_out_in_seconds > 0:
+		_countdown += delta
+		if _countdown > time_out_in_seconds:
+			our_state_machine.switch_state(next_state.name)
 
 func _input(event : InputEvent) -> void:
-    _handle_event(event)
+	_handle_event(event)
 
 func _unhandled_input(event : InputEvent) -> void:
-    _handle_event(event)
+	_handle_event(event)
 
 func _handle_event(event : InputEvent) -> void:
-    # We process on "released" instead of pressed because otherwise immediately
-    # switching screens could still have the mouse being pressed on some other
-    # screen's button.
+	# We process on "released" instead of pressed because otherwise immediately
+	# switching screens could still have the mouse being pressed on some other
+	# screen's button.
     if process_mode == ProcessMode.PROCESS_MODE_DISABLED:
         return
         

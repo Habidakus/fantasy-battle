@@ -31,5 +31,5 @@ func get_sorted_moves(for_computer_player : bool) -> Array[MMCAction]:
 ## just taken the opponent's queen, then this score would be very high as seen from the point of
 ## view of the black pieces.
 func get_score() -> MMCScore:
-    assert(false, "The derived MMCGameState class must implement get_score()")
-    return null
+	assert(false, "The derived MMCGameState class must implement get_score()")
+	return null
