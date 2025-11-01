@@ -15,30 +15,30 @@ func reversed() -> MMCScore:
 ## Returns true only if the current score is better for the Computer Player (the one we're doing all this
 ## computation for) than it would be for the human opponent.
 func is_better_than(other : MMCScore) -> bool:
-    assert(false, "The derived MMCScore class must implement is_better_than()")
-    return false
+	assert(false, "The derived MMCScore class must implement is_better_than()")
+	return false
 
 static var _HIGHEST : MMCScore = MMCConstScore.create_highest()
 static var _LOWEST : MMCScore = MMCConstScore.create_lowest()
 
 static func _is_first_better_than_second(first : MMCScore, second : MMCScore) -> bool:
-    if second == _HIGHEST:
-        return false
-    if first == _LOWEST:
-        return false
-    if first == _HIGHEST:
-        return true
-    if second == _LOWEST:
-        return true
-    return first.is_better_than(second)
-    
+	if second == _HIGHEST:
+		return false
+	if first == _LOWEST:
+		return false
+	if first == _HIGHEST:
+		return true
+	if second == _LOWEST:
+		return true
+	return first.is_better_than(second)
+	
 static func _is_first_better_than_or_equal_to_second(first : MMCScore, second : MMCScore) -> bool:
-    if first == _HIGHEST:
-        return true
-    if second == _LOWEST:
-        return true
-    if second == _HIGHEST:
-        return false
-    if first == _LOWEST:
-        return false
-    return !second.is_better_than(first)
+	if first == _HIGHEST:
+		return true
+	if second == _LOWEST:
+		return true
+	if second == _HIGHEST:
+		return false
+	if first == _LOWEST:
+		return false
+	return !second.is_better_than(first)
